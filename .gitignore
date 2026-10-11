@@ -13,3 +13,8 @@ __pycache__/
 
 # Secrets
 .env
+
+# Full-scale exports are too large for git (guides.json ~86 MB, dataset ~72 MB).
+# The dataset is published to Hugging Face; the site build will fetch it from there.
+data/export/dataset/
+data/export/site/guides.json

@@ -171,7 +171,7 @@ def run() -> None:
     # --- report ---
     mapped_mms = {l["mms_id"] for p in places for l in p["links"]}
     lines = [
-        "# Smoke-test report", "",
+        "# Pipeline run report", "",
         f"- Guides: {len(guides)} ({dict(Counter(g['kind'] for g in guides))})",
         f"- Pages: {len(page_rows)}; engines: {dict(Counter(r['ocr_engine'] for r in page_rows))}",
         f"- RapidOCR mean line confidence: {statistics.mean(scores):.3f}" if scores else "- RapidOCR: not used",

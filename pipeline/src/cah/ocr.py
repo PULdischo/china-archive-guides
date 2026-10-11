@@ -92,10 +92,12 @@ Structured lists (use [] when they do not apply; the HTML already carries everyt
   Not for holdings of reference materials (资料) or other tables.
 - "articles": only wenshi ziliao index entries. "series"/"issue": the series title and 第N辑 number in effect,
   when shown on this page; otherwise null."""
-    # Retry for dense pages whose full answer exceeds the output limit: HTML only.
+    # Retry when the full answer is unusable (over the output limit, or the model looped on
+    # empty table cells): HTML only, with a guard against repetition.
     PROMPT_HTML_ONLY = """This page is from {kind}.
 Return one JSON object: {{"page_type": str, "html": "<the whole page transcribed as simple HTML>"}}
-{rules}"""
+{rules}
+- Never repeat empty rows or cells: if a table has blank rows, omit them. Do not use &nbsp;."""
 
     def __init__(self):
         self.key = os.environ.get("DASHSCOPE_API_KEY")
@@ -107,10 +109,11 @@ Return one JSON object: {{"page_type": str, "html": "<the whole page transcribed
         self.http = httpx.Client(timeout=180, transport=httpx.HTTPTransport(retries=3),
                                  headers={"Authorization": f"Bearer {self.key}"})
 
-    def _post(self, b64: str, prompt: str) -> httpx.Response:
+    def _post(self, b64: str, prompt: str, **params) -> httpx.Response:
         body = {
             "model": self.model,
             "temperature": 0,
+            **params,
             "max_tokens": 4096,  # DashScope's default ceiling for this model
             "messages": [
                 {"role": "system", "content": self.SYSTEM},
@@ -149,8 +152,9 @@ Return one JSON object: {{"page_type": str, "html": "<the whole page transcribed
         if r.status_code >= 400:
             raise RuntimeError(f"DashScope {r.status_code}: {r.text[:300]}")
         meta, parsed = self._parse(r)
-        if parsed is None and meta.get("finish_reason") == "length":
-            r2 = self._post(b64, self.PROMPT_HTML_ONLY.format(kind=kind, rules=self.HTML_RULES))
+        if parsed is None:
+            r2 = self._post(b64, self.PROMPT_HTML_ONLY.format(kind=kind, rules=self.HTML_RULES),
+                            presence_penalty=0.5)
             if r2.status_code < 400:
                 meta2, parsed = self._parse(r2)
                 usage = [u for u in (meta.get("usage"), meta2.get("usage")) if u]
