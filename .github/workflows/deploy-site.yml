@@ -19,6 +19,9 @@ concurrency:
 
 jobs:
   build:
+    # Pages from a private repo needs a paid plan; skip until the repo is public.
+    # (deploy needs build, so it is skipped too.)
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
