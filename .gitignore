@@ -1,0 +1,15 @@
+# Pipeline caches (re-creatable; images are never published)
+data/raw/
+data/images/
+data/ocr/
+data/state/
+# Site build
+site/node_modules/
+site/_site/
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets
+.env

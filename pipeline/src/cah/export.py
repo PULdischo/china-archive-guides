@@ -1,0 +1,192 @@
+"""Export the dataset (JSONL per entity) and site-ready JSON/GeoJSON."""
+
+import json
+import os
+import re
+import statistics
+from collections import Counter
+
+from opencc import OpenCC
+from pypinyin import lazy_pinyin
+
+from . import extract, geo, markup, ocr, records
+from .config import EXPORT, write_json
+
+s2t = OpenCC("s2t")
+
+
+def tidy(row: str) -> str:
+    """Collapse dot leaders for display and search (extraction has already used them)."""
+    return re.sub(r"\s*[…⋯‥·.。]{3,}\s*", " … ", row).strip()
+
+
+def pinyin(text: str | None) -> str:
+    return " ".join(lazy_pinyin(text)) if text else ""
+
+
+def write_jsonl(name: str, rows: list[dict]) -> None:
+    path = EXPORT / "dataset" / f"{name}.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+
+def page_content(g: dict, p: dict, ctx: dict, engines: list[str] | None = None) -> dict:
+    """Text + structured rows for one page from the preferred engine, else the RapidOCR baseline."""
+    engines = engines or [os.environ.get("CAH_OCR_ENGINE", "rapidocr"), "rapidocr"]
+    notes = []
+    for engine in dict.fromkeys(engines):
+        o = ocr.load(engine, p["key"])
+        if o and o.get("blocked"):
+            notes.append(f"{engine}: blocked by {o['blocked']}")
+        if not o or "error" in o:
+            continue
+        if engine == "rapidocr":
+            rows = extract.rows(o["lines"])
+            score = round(statistics.mean(l["score"] for l in o["lines"]), 3) if o["lines"] else None
+            structured = ({"fonds": extract.fonds(rows), "toc": extract.toc(rows), "articles": []}
+                          if g["kind"] == "handbook" else
+                          {"fonds": [], "toc": [], "articles": extract.articles(rows, ctx)})
+            return {"rows": rows, "html": None, "engine": o["engine"], "extraction": "rules", "score": score,
+                    "notes": notes, **structured}
+        # VLM output: carry series/issue across pages, which a single page may not show.
+        articles = []
+        for a in o.get("articles", []):
+            if a.get("series"):
+                ctx["series"], ctx["issue"] = a["series"], a.get("issue")
+            elif a.get("issue"):
+                ctx["issue"] = a["issue"]
+            articles.append({**a, "series": a.get("series") or ctx.get("series"),
+                             "issue": a.get("issue") or ctx.get("issue")})
+        fonds = [{**f, "counts": f.get("counts") or []} for f in o.get("fonds", [])]
+        # Prompt v2+ returns an HTML transcription; v1 returned plain lines.
+        html = markup.sanitize(o["html"]) if o.get("html") else None
+        rows = markup.to_lines(html) if html else o.get("lines", [])
+        # Completeness check against the RapidOCR baseline: the model sometimes puts a page's
+        # content only into the structured rows and leaves the HTML (nearly) empty.
+        base = ocr.load("rapidocr", p["key"])
+        base_chars = sum(len(l["text"]) for l in base["lines"]) if base else 0
+        # Skip short pages (covers), where RapidOCR also reads library barcode stamps.
+        if base_chars >= 100 and sum(map(len, rows)) < 0.5 * base_chars:
+            if o.get("toc") or o.get("fonds") or o.get("articles"):
+                html = markup.from_rows(o.get("toc", []), fonds, articles)
+                rows = markup.to_lines(html)
+                notes.append(f"{engine}: HTML incomplete, rebuilt from structured rows")
+            else:
+                notes.append(f"{engine}: transcription incomplete")
+                continue
+        return {"rows": rows, "html": html, "engine": o["engine"], "extraction": "vlm", "score": None,
+                "notes": notes, "fonds": fonds, "toc": o.get("toc", []), "articles": articles,
+                "page_type": o.get("page_type")}
+    return {"rows": [], "html": None, "engine": None, "extraction": None, "score": None, "notes": notes,
+            "fonds": [], "toc": [], "articles": []}
+
+
+def run() -> None:
+    guides = records.build()
+    places = geo.places()
+    page_rows, fonds_rows, toc_rows, article_rows = [], [], [], []
+    scores = []
+
+    for g in guides:
+        g["fonds"], g["toc"], g["articles"] = [], [], []
+        for v in g["volumes"]:
+            ctx = {}
+            for p in v["pages"]:
+                c = page_content(g, p, ctx)
+                rows = p["rows"] = [tidy(r) for r in c["rows"]]
+                p["ocr_engine"], p["ocr_mean_score"], p["ocr_notes"] = c["engine"], c["score"], c["notes"]
+                p["html"], p["page_type"] = c["html"], c.get("page_type")
+                if c["score"] is not None:
+                    scores.append(c["score"])
+                text = "\n".join(rows)
+                # Search variants: traditional forms of the page text (Pagefind has no s/t folding).
+                trad = s2t.convert(text)
+                p["text_variants"] = trad if trad != text else ""
+
+                ref = {"guide_id": g["id"], "page_n": p["n"], "canvas_id": p["canvas_id"]}
+                prov = {"machine_extracted": True, "extraction": c["extraction"], "engine": c["engine"]}
+                for i, f in enumerate(c["fonds"]):
+                    rec = {"id": f"{p['key']}-f{i}", **f, **ref, **prov}
+                    g["fonds"].append(rec)
+                    fonds_rows.append({**rec, "archive_code": g.get("archive_code")})
+                for i, t in enumerate(c["toc"]):
+                    rec = {"id": f"{p['key']}-t{i}", **t, **ref, **prov}
+                    g["toc"].append(rec)
+                    toc_rows.append(rec)
+                for i, a in enumerate(c["articles"]):
+                    rec = {"id": f"{p['key']}-a{i}", **a, "locality": v["label"], **ref, **prov}
+                    g["articles"].append(rec)
+                    article_rows.append(rec)
+                page_rows.append({**ref, "key": p["key"], "volume": v["label"], "label": p["label"],
+                                  "image_service": p["image_service"], "text": text, "html": p["html"],
+                                  "page_type": p["page_type"],
+                                  "ocr_engine": p["ocr_engine"], "ocr_mean_score": p["ocr_mean_score"],
+                                  "ocr_notes": p["ocr_notes"]})
+
+        g["title_pinyin"] = pinyin(g["title_zh"])
+        g["title_zh_trad"] = s2t.convert(g["title_zh"] or "")
+        spans = [(f["date_start"], f["date_end"]) for f in g["fonds"]
+                 if isinstance(f.get("date_start"), int) and isinstance(f.get("date_end"), int)
+                 and f["date_start"] <= f["date_end"]]
+        years = sorted({y for span in spans for y in span})
+        g["fonds_decades"] = sorted({f"{y // 10 * 10}s" for a, b in spans for y in range(a, b + 1)})
+        g["fonds_span"] = [years[0], years[-1]] if years else None
+
+    # --- dataset (HF-ready JSONL; Parquet comes with the real release step) ---
+    write_jsonl("guides", [{k: v for k, v in g.items() if k not in ("volumes", "fonds", "toc", "articles")}
+                           for g in guides])
+    write_jsonl("pages", page_rows)
+    write_jsonl("fonds", fonds_rows)
+    write_jsonl("toc_entries", toc_rows)
+    write_jsonl("wenshi_articles", article_rows)
+    write_jsonl("places", [{k: v for k, v in p.items() if k != "geometry"} for p in places])
+
+    # --- site ---
+    write_json(EXPORT / "site" / "guides.json", guides)
+    sample_by_mms = {g["mms_id"]: g for g in guides}
+    linked_place_ids = {pl["id"] for g in guides for pl in g["places"]}
+    features = []
+    for p in places:
+        if not p["geometry"]:
+            continue
+        props = {k: p[k] for k in ("id", "level", "code", "name_zh", "name_pinyin", "province_zh")}
+        props["in_sample"] = p["id"] in linked_place_ids
+        props["guides"] = [
+            {"title": l["title"], "year": l["year"],
+             "href": f"/guides/{sample_by_mms[l['mms_id']]['id']}/" if l["mms_id"] in sample_by_mms else l["url"],
+             "local": l["mms_id"] in sample_by_mms}
+            for l in p["links"]
+        ]
+        # Wenshi guides are not on the legacy map; attach them to their province.
+        props["guides"] += [{"title": g["title_zh"], "year": g["year"], "href": f"/guides/{g['id']}/", "local": True}
+                            for g in guides if g["kind"] == "wenshi" and p["id"] in {x["id"] for x in g["places"]}]
+        features.append({"type": "Feature", "properties": props, "geometry": p["geometry"]})
+    (EXPORT / "site").mkdir(parents=True, exist_ok=True)
+    (EXPORT / "site" / "places.geojson").write_text(
+        json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8")
+
+    # --- report ---
+    mapped_mms = {l["mms_id"] for p in places for l in p["links"]}
+    lines = [
+        "# Smoke-test report", "",
+        f"- Guides: {len(guides)} ({dict(Counter(g['kind'] for g in guides))})",
+        f"- Pages: {len(page_rows)}; engines: {dict(Counter(r['ocr_engine'] for r in page_rows))}",
+        f"- RapidOCR mean line confidence: {statistics.mean(scores):.3f}" if scores else "- RapidOCR: not used",
+        f"- Pages blocked by DashScope moderation (RapidOCR fallback used): "
+        f"{sum(any('blocked' in n for n in r['ocr_notes']) for r in page_rows)}",
+        f"- Extracted fonds rows: {len(fonds_rows)}; contents entries: {len(toc_rows)}; wenshi article rows: {len(article_rows)}",
+        f"- Legacy map: {len(places)} places, {len(mapped_mms)} linked catalog records", "",
+        "| Guide | Kind | Year (raw) | Place match | Places | Pages | Fonds | Contents | Articles |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for g in guides:
+        lines.append(
+            f"| {g['id']} {g['title_zh']} | {g['kind']} | {g['year']} ({g['date_raw']}"
+            f"{', malformed' if g['date_malformed'] else ''}) | {g['place_match'] or '—'} | "
+            f"{', '.join(p['name_zh'] for p in g['places']) or '—'} | "
+            f"{sum(len(v['pages']) for v in g['volumes'])} | {len(g['fonds'])} | {len(g['toc'])} | {len(g['articles'])} |")
+    (EXPORT / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print("\n".join(lines))

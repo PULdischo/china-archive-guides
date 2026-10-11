@@ -1,0 +1,18 @@
+# What the pipeline processes, per collection.
+# - browse: a DPUL browse category; every item in it is harvested (re-listed each run,
+#   so new items are picked up and removed ones are reported).
+# - ids: an explicit list of DPUL access identifiers (https://dpul.princeton.edu/ealtoc/catalog/{id}).
+# Limits: 0 = no limit.
+
+[handbook]
+browse = "chinese-archival-handbooks"   # 343 items as of 2026-10-11
+max_pages_per_volume = 0
+
+[wenshi]
+# Full harvest deferred (~45,800 pages); keep the smoke-test sample for now.
+ids = [
+    "dc3r075544d", # 中国文史资料总目录电子版. 四川卷
+    "dcmg74qz71f", # 中国文史资料总目录电子版. 贵州卷
+]
+max_volumes = 2
+max_pages_per_volume = 8

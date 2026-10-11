@@ -1,0 +1,20 @@
+---
+layout: layout.njk
+title: Map
+permalink: /map/
+---
+<link rel="stylesheet" href="/assets/vendor/maplibre-gl.css">
+<h1>Map</h1>
+<p class="note">Places from the legacy ArcGIS map (to be retired). Highlighted places have guides in this sample;
+  others link to the Princeton catalog. Click a place for its guides.</p>
+<div id="map" data-geojson="{{ '/data/places.geojson' | htmlBaseUrl }}" data-base="{{ '/' | htmlBaseUrl }}"></div>
+
+<h2>Places with guides in this sample</h2>
+<ul class="place-list" lang="zh">
+{% for g in guides %}{% for p in g.places %}
+  <li id="{{ p.id }}"><strong>{{ p.name_zh }}</strong> ({{ site.levelLabels[p.level] }}) — <a href="/guides/{{ g.id }}/">{{ g.title_zh }}</a></li>
+{% endfor %}{% endfor %}
+</ul>
+
+<script src="/assets/vendor/maplibre-gl.js"></script>
+<script type="module" src="/assets/map.js"></script>

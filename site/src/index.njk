@@ -1,0 +1,24 @@
+---
+layout: layout.njk
+---
+<section class="hero">
+  <h1>Find Chinese archives and local history sources</h1>
+  <p>Search the tables of contents and fonds lists of Chinese archival handbooks (档案馆指南) together with
+    wenshi ziliao (文史资料) indexes from Princeton's East Asian Library. Every result links back to the original scan.</p>
+  <form action="/search/" method="get" class="searchbox" role="search">
+    <label for="q" class="visually-hidden">Search</label>
+    <input id="q" name="q" type="search" placeholder="e.g. 邮政, 煤矿, 交通部, 1949" lang="zh">
+    <button type="submit">Search</button>
+  </form>
+</section>
+
+{% set handbooks = guides | selectattr("kind", "equalto", "handbook") %}
+{% set wenshi = guides | selectattr("kind", "equalto", "wenshi") %}
+<ul class="stats">
+  <li><strong>{{ handbooks | length }}</strong> archival handbooks</li>
+  <li><strong>{{ wenshi | length }}</strong> wenshi ziliao indexes</li>
+  <li><strong>{{ guides | countOf("fonds") }}</strong> fonds extracted</li>
+  <li><strong>{{ guides | countOf("toc") }}</strong> contents entries extracted</li>
+  <li><strong>{{ guides | countOf("articles") }}</strong> wenshi articles extracted</li>
+</ul>
+<p class="note">This smoke test covers a small sample; wenshi ziliao volumes are sampled to a few pages each.</p>

@@ -1,0 +1,21 @@
+---
+layout: layout.njk
+title: Guides
+permalink: /guides/
+---
+<h1>Guides</h1>
+<table class="data">
+  <thead><tr><th>Title</th><th>Type</th><th>Place</th><th>Year</th><th>Pages</th><th>Original</th></tr></thead>
+  <tbody>
+  {% for g in guides | sort(false, false, "year") %}
+    <tr>
+      <td><a href="/guides/{{ g.id }}/" lang="zh">{{ g.title_zh }}</a><br><small>{{ g.title_romanized }}</small></td>
+      <td>{{ site.kindLabels[g.kind] }}</td>
+      <td lang="zh">{% for p in g.places %}{{ p.name_zh }}{% if not loop.last %}, {% endif %}{% else %}—{% endfor %}</td>
+      <td>{{ g.year or "—" }}</td>
+      <td>{{ g | pageCount }}</td>
+      <td><a href="{{ g.urls.dpul }}">DPUL</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>

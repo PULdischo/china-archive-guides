@@ -1,0 +1,16 @@
+{
+  "name": "china-archive-guides-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "eleventy && pagefind --site _site --force-language zh",
+    "dev": "npm run build && eleventy --serve"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "3.1.6",
+    "pagefind": "1.5.2"
+  },
+  "dependencies": {
+    "maplibre-gl": "5.24.0"
+  }
+}

@@ -1,0 +1,118 @@
+---
+layout: layout.njk
+pagefind: true
+pagination:
+  data: guides
+  size: 1
+  alias: g
+permalink: "/guides/{{ g.id }}/"
+eleventyComputed:
+  title: "{{ g.title_zh }}"
+---
+{# Search facets and sort keys: read by Pagefind, excluded from indexed text. #}
+<div hidden data-pagefind-ignore>
+  <span data-pagefind-filter="Type">{{ site.kindLabels[g.kind] }}</span>
+  {% for p in g.places %}
+    <span data-pagefind-filter="Province">{{ p.province_zh or p.name_zh }}</span>
+    <span data-pagefind-filter="Level">{{ site.levelLabels[p.level] }}</span>
+  {% endfor %}
+  {% if g.year %}<span data-pagefind-filter="Published">{{ g.year | decade }}</span>
+  <span data-pagefind-sort="year">{{ g.year }}</span>{% endif %}
+  {% for d in g.fonds_decades %}<span data-pagefind-filter="Fonds cover">{{ d }}</span>{% endfor %}
+</div>
+{# Variant forms so traditional-character and pinyin queries match the title. #}
+<div hidden>{{ g.title_zh_trad }} {{ g.title_pinyin }} {{ g.title_romanized }}</div>
+
+<p class="kind">{{ site.kindLabels[g.kind] }}</p>
+<h1 lang="zh" data-pagefind-meta="title">{{ g.title_zh }}</h1>
+{% if g.title_romanized %}<p class="romanized">{{ g.title_romanized }}</p>{% endif %}
+
+<div class="links-back" data-pagefind-ignore>
+  <a class="button" href="{{ g.urls.dpul }}">View original in DPUL</a>
+  {% if g.urls.catalog %}<a href="{{ g.urls.catalog }}">Catalog record</a>{% endif %}
+  {% if g.urls.ark %}<a href="{{ g.urls.ark }}">ARK</a>{% endif %}
+  <a href="{{ g.urls.manifest }}">IIIF manifest</a>
+</div>
+
+<dl class="meta" data-pagefind-ignore>
+  <dt>Editor</dt><dd lang="zh">{{ g.editor | join("; ") }}</dd>
+  <dt>Publisher</dt><dd>{{ g.publisher | join("; ") }}</dd>
+  <dt>Date</dt><dd>{{ g.year or "—" }}{% if g.date_malformed %} <span class="flag" title="Catalog date: {{ g.date_raw }}">catalog date “{{ g.date_raw }}” normalized</span>{% endif %}</dd>
+  <dt>Place</dt><dd lang="zh">
+    {% for p in g.places %}<a href="/map/#{{ p.id }}">{{ p.name_zh }}</a> ({{ site.levelLabels[p.level] }}){% if not loop.last %}, {% endif %}{% else %}—{% endfor %}
+    {% if g.place_match %}<small>matched by {{ g.place_match | replace("_", " ") }}</small>{% endif %}
+  </dd>
+  {% if g.admin_code %}<dt>Admin code</dt><dd>{{ g.admin_code }}</dd>{% endif %}
+  {% if g.archive_code %}<dt>Archive code</dt><dd>{{ g.archive_code }}</dd>{% endif %}
+  <dt>Call number</dt><dd>{{ g.call_number }}</dd>
+  <dt>Extent</dt><dd>{{ g.extent }}</dd>
+  <dt>Rights</dt><dd>{{ g.rights }}</dd>
+  {% if g.fonds_span %}<dt>Fonds cover</dt><dd>{{ g.fonds_span[0] }}–{{ g.fonds_span[1] }} (from extracted rows)</dd>{% endif %}
+</dl>
+
+{% if g.volumes_sampled %}
+<p class="note" data-pagefind-ignore>Sampled: showing {{ g | pageCount }} pages from {{ g.volumes.length }} of {{ g.volumes_total }} volume(s). The full item is in DPUL.</p>
+{% endif %}
+
+{% if g.fonds.length %}
+<details class="extracted" data-pagefind-ignore>
+  <summary>Fonds list — {{ g.fonds.length }} rows (machine-extracted, provisional)</summary>
+  <table class="data">
+    <thead><tr><th>No.</th><th>Fonds</th><th>Counts</th><th>Dates</th><th>Scan</th></tr></thead>
+    <tbody>{% for f in g.fonds %}
+      <tr><td>{{ f.fonds_no }}</td><td lang="zh">{{ f.name }}</td><td>{{ f.counts | join(" / ") }}</td><td>{{ f.date_start }}–{{ f.date_end }}</td><td><a href="#p{{ f.page_n }}">p{{ f.page_n }}</a></td></tr>
+    {% endfor %}</tbody>
+  </table>
+</details>
+{% endif %}
+
+{% if g.toc.length %}
+<details class="extracted" data-pagefind-ignore>
+  <summary>Contents — {{ g.toc.length }} entries (machine-extracted, provisional)</summary>
+  <table class="data">
+    <thead><tr><th>Section</th><th>Entry</th><th>Book p.</th><th>Scan</th></tr></thead>
+    <tbody>{% for t in g.toc %}
+      <tr><td lang="zh">{{ t.section }}</td><td lang="zh">{{ t.heading }}</td><td>{{ t.page }}</td><td><a href="#p{{ t.page_n }}">p{{ t.page_n }}</a></td></tr>
+    {% endfor %}</tbody>
+  </table>
+</details>
+{% endif %}
+
+{% if g.articles.length %}
+<details class="extracted" data-pagefind-ignore>
+  <summary>Wenshi articles — {{ g.articles.length }} rows (machine-extracted, provisional)</summary>
+  <table class="data">
+    <thead><tr><th>Locality</th><th>Series / issue</th><th>Title</th><th>Author</th><th>p.</th><th>Scan</th></tr></thead>
+    <tbody>{% for a in g.articles %}
+      <tr><td lang="zh">{{ a.locality }}</td><td lang="zh">{{ a.series }}{% if a.issue %} 第{{ a.issue }}辑{% endif %}</td>
+        <td lang="zh">{{ a.title }}</td><td lang="zh">{{ a.author }}</td><td>{{ a.page }}</td><td><a href="#p{{ a.page_n }}">p{{ a.page_n }}</a></td></tr>
+    {% endfor %}</tbody>
+  </table>
+</details>
+{% endif %}
+
+<h2>Pages</h2>
+{% for v in g.volumes %}
+  {% if g.kind == "wenshi" %}<h2 id="v{{ v.index }}" lang="zh" class="volume">{{ v.label }}</h2>{% endif %}
+  {% for p in v.pages %}
+  <section class="page">
+    <h3 id="p{{ p.n }}">{% if g.kind == "wenshi" %}<span lang="zh">{{ v.label }}</span> · {% endif %}Scan {{ p.n }} <small>(label “{{ p.label }}”)</small></h3>
+    <figure data-pagefind-ignore>
+      <a href="{{ p.viewer_url }}" title="Open this page in the Figgy viewer">
+        <img loading="lazy" src="{{ p.image_service | iiif('!300,450') }}" alt="Scan {{ p.n }} of {{ g.title_zh }}" width="300">
+      </a>
+      <figcaption><a href="{{ p.viewer_url }}">Viewer</a> · <a href="{{ p.image_service | iiif('full') }}">Full image</a></figcaption>
+    </figure>
+    <div class="ocr" lang="zh">
+      {% if p.ocr_engine %}<p class="engine" lang="en" data-pagefind-ignore>Machine transcription{% if p.page_type %} ({{ p.page_type | replace("_", " ") }}){% endif %} · {{ p.ocr_engine }}{% for n in p.ocr_notes %} · {{ n }}{% endfor %}</p>{% endif %}
+      {% if p.html %}
+        {# Sanitized in the pipeline (cah.markup): structural tags only. #}
+        <div class="transcript">{{ p.html | safe }}</div>
+      {% else %}
+        {% for row in p.rows %}<p>{{ row }}</p>{% else %}<p class="note">No OCR text yet.</p>{% endfor %}
+      {% endif %}
+      {% if p.text_variants %}<div hidden>{{ p.text_variants }}</div>{% endif %}
+    </div>
+  </section>
+  {% endfor %}
+{% endfor %}

@@ -1,0 +1,23 @@
+---
+layout: layout.njk
+title: Search
+permalink: /search/
+---
+<link rel="stylesheet" href="/pagefind/pagefind-ui.css">
+<h1>Search</h1>
+<p class="note">Searches OCR text of tables of contents, fonds lists and wenshi ziliao indexes, plus titles.
+  Chinese (simplified or traditional), pinyin and English titles are supported. Results jump to the matching scan.</p>
+<div id="search"></div>
+<script src="/pagefind/pagefind-ui.js"></script>
+<script>
+  const ui = new PagefindUI({
+    element: "#search",
+    baseUrl: "{{ "/" | htmlBaseUrl }}",
+    showSubResults: true,
+    showImages: false,
+    excerptLength: 40,
+    resetStyles: false,
+  });
+  const q = new URLSearchParams(location.search).get("q");
+  if (q) ui.triggerSearch(q);
+</script>
