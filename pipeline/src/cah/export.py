@@ -165,7 +165,8 @@ def run() -> None:
                 trad = s2t.convert(text)
                 p["text_variants"] = trad if trad != text else ""
 
-                ref = {"guide_id": g["id"], "page_n": p["n"], "canvas_id": p["canvas_id"]}
+                ref = {"guide_id": g["id"], "page_n": p["n"], "canvas_id": p["canvas_id"],
+                       "viewer_url": p["viewer_url"]}
                 prov = {"machine_extracted": True, "extraction": c["extraction"], "engine": c["engine"]}
                 for i, f in enumerate(c["fonds"]):
                     rec = {"id": f"{p['key']}-f{i}", **f, **clean_fonds_dates(f), **ref, **prov}

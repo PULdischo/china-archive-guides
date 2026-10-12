@@ -213,7 +213,7 @@ We maintain the map, so retirement is in our hands:
 | 3 | Map as a derived view, not a source | **Resolved:** we maintain it and will retire it (§3.8) |
 | 4 | Historical admin geography (code changes, CHGIS for pre-1949) | Adopted: `valid-from/to` on Place |
 | 5 | Repositories as entities linked to Wikidata/authorities | Adopted |
-| 6 | Rights | **Resolved:** derived metadata may be published (CC0). Still to check: boundary polygon license (§3.8) |
+| 6 | Rights | **Resolved:** derived metadata may be published (CC0). **Wenshi ziliao (2026-10-12):** publish the index (titles, authors, page numbers, series/issue) and transcribed index pages, as for the handbooks; no full texts. The site is for discovery and sends users to DPUL; link out to full-text platforms (中国文史资料集粹, CASS) where available. The CD-ROM index has no rights statement on the scanned pages or in the catalog record (DPUL: "Copyright Not Evaluated"); the physical disc/packaging was not checked. Boundaries: geoBoundaries is public domain |
 | 7 | OCR quality plan (gold set, CER, QA, error reporting) | Adopted. Error reports flow into `corrections/` via GitHub issues or a simple form |
 | 8 | Currency/access realities; moderated access notes; researcher safety | Open |
 | 9 | Peer-library expansion method | §6 |

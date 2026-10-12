@@ -98,6 +98,7 @@ details.extracted summary { cursor: pointer; font-weight: 600; }
 #search-app .pages { list-style: none; padding: 0; margin: 0; font-size: .9rem; }
 #search-app .pages li { margin: .2rem 0; }
 #search-app .pages a { white-space: nowrap; margin-right: .5rem; }
+#search-app .pages a.dpul { font-size: .8rem; }
 #search-app mark { background: color-mix(in srgb, var(--accent) 25%, transparent); color: inherit; padding: 0 .1em; }
 #search-app .more { margin-top: 1rem; }
 

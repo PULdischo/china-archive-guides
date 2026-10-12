@@ -29,10 +29,10 @@ eleventyComputed:
 <details class="extracted" open>
   <summary>Articles — {{ v.articles.length }} entries (machine-extracted, provisional)</summary>
   <table class="data">
-    <thead><tr><th>Series / issue</th><th>Title</th><th>Author</th><th>p.</th><th>Scan</th></tr></thead>
+    <thead><tr><th>Series / issue</th><th>Title</th><th>Author</th><th>p.</th><th>Scan</th><th>DPUL</th></tr></thead>
     <tbody>{% for a in v.articles %}
       <tr><td lang="zh">{{ a.series }}{% if a.issue %} 第{{ a.issue }}辑{% endif %}</td>
-        <td lang="zh">{{ a.title }}</td><td lang="zh">{{ a.author }}</td><td>{{ a.page }}</td><td><a href="#p{{ a.page_n }}">{{ a.page_n }}</a></td></tr>
+        <td lang="zh">{{ a.title }}</td><td lang="zh">{{ a.author }}</td><td>{{ a.page }}</td><td><a href="#p{{ a.page_n }}">{{ a.page_n }}</a></td><td><a href="{{ a.viewer_url }}">View</a></td></tr>
     {% endfor %}</tbody>
   </table>
 </details>

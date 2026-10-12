@@ -11,6 +11,10 @@ const list = root.querySelector(".results");
 const more = root.querySelector(".more");
 const FACETS = ["Type", "Province", "Published", "Fonds cover"];
 
+// Same link policy as the site build (eleventy.config.js): outside links open in a new tab, marked.
+const NEW_TAB = ' target="_blank" rel="noopener"';
+const NEW_TAB_LABEL = '<span class="ext" aria-hidden="true">↗</span>' +
+  '<span class="visually-hidden"> (opens in a new tab, <span lang="zh">在新标签页打开</span>)</span>';
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 const pagefind = await import(`${base}pagefind/pagefind.js`);
@@ -59,7 +63,8 @@ function render(res, append) {
       <h3><a href="${href}" lang="zh">${esc(g.title)}</a>${g.year ? ` <span class="year">${esc(g.year)}</span>` : ""}</h3>
       ${g.matches == null ? "" : `<p class="count">${g.matches} matching ${g.matches === 1 ? "record" : "records"}</p>`}
       <ul class="pages">${(pages.length ? pages : g.pages).map((p) => `<li>
-        <a href="${esc(p.url)}">${esc(p.meta.page || "Guide record")}</a>
+        <a href="${esc(p.url)}">${esc(p.meta.page || "Guide record")}</a>${p.meta.viewer
+          ? `<a class="dpul" href="${esc(p.meta.viewer)}"${NEW_TAB}>DPUL${NEW_TAB_LABEL}</a>` : ""}
         <span class="excerpt" lang="zh">${excerpt(p.meta.text.replace(/\s+/g, " "), state.q)}</span></li>`).join("")}</ul>
     </li>`);
   }
