@@ -184,6 +184,10 @@ Return one JSON object: {{"page_type": str, "html": "<the whole page transcribed
 ENGINES = {"rapidocr": RapidOCREngine, "dashscope": DashScopeEngine}
 
 
+# Pages that keep failing (e.g. the model loops on empty table cells) stop being retried.
+MAX_ATTEMPTS = 3
+
+
 def needs_fallback(key: str) -> bool:
     """A page the primary engine (DashScope) has no usable result for."""
     o = load("dashscope", key)
@@ -199,18 +203,21 @@ def run(engine_name: str | None = None, fallback_only: bool = False) -> None:
             continue
         img_hash = hashlib.sha256(img.read_bytes()).hexdigest()
         cached = load(engine.name, p["key"])
-        if cached and cached["image_sha256"] == img_hash and cached["engine"] == engine.version_for(g) \
-                and ("error" not in cached or cached.get("blocked")):
-            continue
-        todo.append((g, p, img, img_hash))
+        current = cached and cached["image_sha256"] == img_hash and cached["engine"] == engine.version_for(g)
+        if current and ("error" not in cached or cached.get("blocked")
+                        or cached.get("attempts", 1) >= MAX_ATTEMPTS):
+            continue  # done, blocked, or failing persistently (left to the RapidOCR fallback)
+        todo.append((g, p, img, img_hash, cached.get("attempts", 1) if current else 0))
     print(f"  {engine.name}: {len(todo)} pages to OCR")
 
     def work(item):
-        g, p, img, img_hash = item
+        g, p, img, img_hash, attempts = item
         try:
             result = engine(img, g)
         except Exception as e:  # keep going; failed pages are retried next run
             result = {"error": str(e)}
+        if "error" in result and not result.get("blocked"):
+            result["attempts"] = attempts + 1
         write_json(cache_path(engine.name, p["key"]),
                    {"engine": engine.version_for(g), "image_sha256": img_hash, "canvas_id": p["canvas_id"], **result})
         return result
