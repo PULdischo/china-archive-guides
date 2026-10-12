@@ -18,3 +18,7 @@ __pycache__/
 # The dataset is published to Hugging Face; the site build will fetch it from there.
 data/export/dataset/
 data/export/site/guides.json
+
+# Search records are large (34 MB); rebuilt by `cah search`. The eval set stays tracked.
+data/export/search/records.jsonl
+data/export/search/eval-*.json

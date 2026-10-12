@@ -1,6 +1,6 @@
 # China Archive & Local History Guides — Project Plan
 
-*Draft v0.6 — 2026-10-11*
+*Draft v0.7 — 2026-10-11*
 
 ## 1. Goal
 
@@ -125,6 +125,28 @@ Known gaps and mitigations:
 | Per-language index splitting would separate zh and en records | Index all records as `zh` (or force the language) so English/pinyin queries reach the same index; the UI language is separate |
 | Scale/file count: 500k article-level records would overload Pages | Index at the **canvas level** (~10k handbook pages + ~46k wenshi pages ≈ 56k records) plus guide/repository/place pages; rows become sub-results |
 | No fuzzy matching; phrase-query behavior unverified | Include in the bake-off |
+
+**Result (2026-10-11, full handbook set: 345 guides, 6,192 pages): keep Pagefind, but with our own tokens.**
+
+- **Root cause:** since 1.5.0, Pagefind segments CJK *queries* in the browser with `Intl.Segmenter` (ICU), but segments the *index* at build time with its own Rust segmenter. The word boundaries differ. `四川省粮食` returned 0 guides (四川省 is almost absent as an index token). Unspaced names matched only on their first word (`交通部公路总局` = `交通部`, 298 guides). `郵政` matched 216 guides via 郵 alone, vs 86 for `邮政`.
+- **Fix (`cah search` + `site/src/assets/search-core.js`):**
+  - Text is folded to simplified (a 3,751-pair character map from OpenCC), spaces between Han characters are dropped, and each Han run is indexed as overlapping unigrams + bigrams.
+  - Han tokens are encoded as opaque ASCII words (四川 → `h22235x24029`), so Pagefind's segmenter and stemmer can't re-split them. The browser applies identical normalization and encoding to queries (Python/JS parity tested: 204/204 texts identical).
+  - The exact string is verified on candidate pages, with whole-word matching for romanized terms.
+  - One record per scanned page carries a `guide` filter. One search therefore returns per-guide match counts without loading fragments. Guides are ranked by number of matching pages, and only the top guides' best pages are loaded.
+- **Scores** on the auto-generated test set (82 queries; ground truth = guides containing the query string; `data/export/search/eval.json`, run with `npm run eval:search`):
+
+  | Query type | n | Pagefind default (recall@10 / prec@10) | Custom tokens |
+  |---|---|---|---|
+  | Fonds names | 25 | 0.60 / 0.18 | 1.00 / 1.00 |
+  | Topics | 30 | 0.89 / 0.90 | 1.00 / 1.00 |
+  | Fonds names, traditional | 10 | 0.50 / 0.15 | 1.00 / 1.00 |
+  | Topics, traditional | 7 | 0.71 / 0.71 | 1.00 / 1.00 |
+  | Romanized titles | 10 | 0.97 / 0.97 | 0.98 / 0.98 |
+  | **All** | 82 | **0.75 / 0.58** | **1.00 / 1.00** |
+
+  Mean latency was ~200 ms per query on a local server (topics ~370 ms). Index: 37 MB (the whole site is 47 MB, down from 59 MB). Precision is high partly by construction (the check is exact-string). The test set does not yet judge *ranking* among many relevant guides (e.g. 268 guides contain 粮食局). Add real researcher queries with graded relevance.
+- **SQLite fallback not needed.** Still open: whether ranking by matching-page count suits researchers, phrase ranking for multi-word romanized queries, and the cost of Pagefind's own excerpts (unused; we render excerpts from `meta.text`).
 
 **Bake-off (Phase 2 exit):**
 - **Queries:** 40–60 real queries collected from grad students, faculty, and reference staff, in Chinese simplified/traditional, pinyin, and English.

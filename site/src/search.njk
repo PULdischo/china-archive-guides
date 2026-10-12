@@ -3,21 +3,20 @@ layout: layout.njk
 title: Search
 permalink: /search/
 ---
-<link rel="stylesheet" href="/pagefind/pagefind-ui.css">
 <h1>Search</h1>
-<p class="note">Searches OCR text of tables of contents, fonds lists and wenshi ziliao indexes, plus titles.
-  Chinese (simplified or traditional), pinyin and English titles are supported. Results jump to the matching scan.</p>
-<div id="search"></div>
-<script src="/pagefind/pagefind-ui.js"></script>
-<script>
-  const ui = new PagefindUI({
-    element: "#search",
-    baseUrl: "{{ "/" | htmlBaseUrl }}",
-    showSubResults: true,
-    showImages: false,
-    excerptLength: 40,
-    resetStyles: false,
-  });
-  const q = new URLSearchParams(location.search).get("q");
-  if (q) ui.triggerSearch(q);
-</script>
+<p class="note">Finds guides whose tables of contents, fonds lists and indexes contain your search, as an exact string
+  (no spaces needed in Chinese). Simplified and traditional characters match each other; pinyin and English titles work too.
+  Separate several terms with spaces to require all of them.</p>
+<div id="search-app" data-base="{{ '/' | htmlBaseUrl }}">
+  <form class="searchbox" role="search">
+    <label for="q" class="visually-hidden">Search</label>
+    <input id="q" name="q" type="search" placeholder="e.g. 交通部公路总局, 粮食局, 郵政, Hunan" lang="zh" autocomplete="off">
+    <button type="submit">Search</button>
+  </form>
+  <div class="filters"></div>
+  <p class="status" role="status" aria-live="polite"></p>
+  <ol class="results"></ol>
+  <button class="more" type="button" hidden>More results</button>
+</div>
+<noscript><p>Search needs JavaScript. Browse the <a href="/guides/">list of guides</a> instead.</p></noscript>
+<script type="module" src="/assets/search-page.js"></script>

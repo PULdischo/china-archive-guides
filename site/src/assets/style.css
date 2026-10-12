@@ -14,16 +14,7 @@
     --border: #34363a; --panel: #222427; --flag: #facc15;
   }
 }
-/* Pagefind UI sets its own defaults on .pagefind-ui, so theme it there. */
-.pagefind-ui {
-  --pagefind-ui-primary: var(--accent);
-  --pagefind-ui-text: var(--fg);
-  --pagefind-ui-background: var(--bg);
-  --pagefind-ui-border: var(--border);
-  --pagefind-ui-tag: var(--panel);
-  --pagefind-ui-font: var(--font);
-}
-.pagefind-ui__search-input { color: var(--fg) !important; }
+[hidden] { display: none !important; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 var(--font); }
 a { color: var(--accent); }
@@ -90,3 +81,18 @@ details.extracted summary { cursor: pointer; font-weight: 600; }
   .page img { max-width: 300px; }
   table.data { display: block; overflow-x: auto; }
 }
+
+/* Search page */
+#search-app .filters { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin: .75rem 0; font-size: .875rem; color: var(--muted); }
+#search-app select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: .2rem .3rem; max-width: 16rem; }
+#search-app .status { color: var(--muted); font-size: .9rem; }
+#search-app .results { list-style: none; padding: 0; margin: 0; }
+#search-app .result { border-top: 1px solid var(--border); padding: .75rem 0; }
+#search-app .result h3 { margin: 0; font-size: 1.05rem; }
+#search-app .result .year { color: var(--muted); font-weight: 400; font-size: .9rem; }
+#search-app .count { margin: .1rem 0 .3rem; color: var(--muted); font-size: .8rem; }
+#search-app .pages { list-style: none; padding: 0; margin: 0; font-size: .9rem; }
+#search-app .pages li { margin: .2rem 0; }
+#search-app .pages a { white-space: nowrap; margin-right: .5rem; }
+#search-app mark { background: color-mix(in srgb, var(--accent) 25%, transparent); color: inherit; padding: 0 .1em; }
+#search-app .more { margin-top: 1rem; }

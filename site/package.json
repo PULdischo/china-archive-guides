@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "eleventy && pagefind --site _site --force-language zh",
-    "dev": "npm run build && eleventy --serve"
+    "build": "eleventy && node scripts/build-search-index.mjs ../data/export/search/records.jsonl _site/pagefind",
+    "dev": "npm run build && eleventy --serve",
+    "eval:search": "node scripts/eval-search.mjs http://127.0.0.1:8766/ custom pagefind"
   },
   "devDependencies": {
     "@11ty/eleventy": "3.1.6",
