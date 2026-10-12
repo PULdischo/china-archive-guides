@@ -5,16 +5,18 @@ permalink: /map/
 ---
 <link rel="stylesheet" href="/assets/vendor/maplibre-gl.css">
 <h1>Map</h1>
-<p class="note">Places from the legacy ArcGIS map (to be retired). Highlighted places have guides in this sample;
-  others link to the Princeton catalog. Click a place for its guides.</p>
+<p class="note">Provinces are shaded by number of guides (darker = more); click one for a link to all its guides.
+  Outlined areas are prefectures (green) and counties (orange) with their own guides; click for the list.
+  Only provinces with guides are shown, with no national outline.</p>
 <div id="map" data-geojson="{{ '/data/places.geojson' | htmlBaseUrl }}" data-base="{{ '/' | htmlBaseUrl }}"></div>
 
-<h2>Places with guides in this sample</h2>
-<ul class="place-list" lang="zh">
-{% for g in guides %}{% for p in g.places %}
-  <li id="{{ p.id }}"><strong>{{ p.name_zh }}</strong> ({{ site.levelLabels[p.level] }}) — <a href="/guides/{{ g.id }}/">{{ g.title_zh }}</a></li>
-{% endfor %}{% endfor %}
-</ul>
+<h2>Guides by province</h2>
+<ol class="province-list">
+  {% for p in provinces.provinces %}
+  <li><a href="/search/?Province={{ p.zh | urlencode }}"><span lang="zh">{{ p.zh }}</span> <span class="en">{{ p.en }}</span></a><span class="n">{{ p.count }}</span></li>
+  {% endfor %}
+</ol>
+<p class="note">{{ provinces.source }}. Prefecture and county shapes: Princeton East Asian Library ArcGIS layers (2024).</p>
 
 <script src="/assets/vendor/maplibre-gl.js"></script>
 <script type="module" src="/assets/map.js"></script>

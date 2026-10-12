@@ -164,3 +164,18 @@ def province_shapes(codes: set[str], width: int = 1000) -> dict:
         pt = g.representative_point()
         labels[code] = [round((pt.x - minx) * scale, 1), round((pt.y - miny) * scale, 1)]
     return {"viewBox": f"0 0 {width} {height}", "paths": {c: path(g) for c, g in geoms.items()}, "labels": labels}
+
+
+def province_features(codes: set[str]) -> list[dict]:
+    """GeoJSON features (lon/lat, simplified) for the given provinces, for the web map."""
+    from shapely.geometry import mapping, shape
+
+    out = []
+    for f in read_json(BOUNDARIES)["features"]:
+        name = f["properties"]["shapeName"]
+        code = SHAPE_NAMES.get(name) or next(
+            (c for c, (_, en) in PROVINCES.items() if name.split(" ")[0] == en.split(" ")[0]), None)
+        if code in codes:
+            geom = shape(f["geometry"]).simplify(0.01, preserve_topology=True)
+            out.append({"code": code, "geometry": mapping(geom)})
+    return out

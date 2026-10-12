@@ -187,23 +187,38 @@ def run() -> None:
 
     # --- site ---
     write_json(EXPORT / "site" / "guides.json", guides)
-    sample_by_mms = {g["mms_id"]: g for g in guides}
-    linked_place_ids = {pl["id"] for g in guides for pl in g["places"]}
+    # Web map. Provinces: geoBoundaries shapes for provinces with guides (no national outline),
+    # popup = count + link to the province's guide list. Prefectures/counties: legacy ArcGIS
+    # shapes, popup = every guide matched to the place (+ legacy catalog-only links).
+    from urllib.parse import quote
+
+    geo.fetch_boundaries()
+    by_mms = {g["mms_id"]: g for g in guides}
+    prov_count = Counter(g["province"]["code"] for g in guides if g["province"])
+    breaks = [3, 7, 12, 20]  # same classes as the home-page map
     features = []
+    for pf in geo.province_features({c for c in prov_count if c in geo.PROVINCES}):
+        zh, en = geo.PROVINCES[pf["code"]]
+        n = prov_count[pf["code"]]
+        features.append({"type": "Feature", "geometry": pf["geometry"], "properties": {
+            "id": f"province:{pf['code']}", "level": "province", "code": pf["code"], "name_zh": zh,
+            "name_pinyin": en, "count": n, "cls": sum(n > b for b in breaks),
+            "browse": f"/search/?Province={quote(zh)}"}})
     for p in places:
-        if not p["geometry"]:
+        if not p["geometry"] or p["level"] not in ("prefecture", "county"):
             continue
-        props = {k: p[k] for k in ("id", "level", "code", "name_zh", "name_pinyin", "province_zh")}
-        props["in_sample"] = p["id"] in linked_place_ids
-        props["guides"] = [
-            {"title": l["title"], "year": l["year"],
-             "href": f"/guides/{sample_by_mms[l['mms_id']]['id']}/" if l["mms_id"] in sample_by_mms else l["url"],
-             "local": l["mms_id"] in sample_by_mms}
-            for l in p["links"]
-        ]
-        # Wenshi guides are not on the legacy map; attach them to their province.
-        props["guides"] += [{"title": g["title_zh"], "year": g["year"], "href": f"/guides/{g['id']}/", "local": True}
-                            for g in guides if g["kind"] == "wenshi" and p["id"] in {x["id"] for x in g["places"]}]
+        local = [g for g in guides if p["id"] in {x["id"] for x in g["places"]}]
+        linked = [{"title": g["title_zh"], "year": g["year"], "href": f"/guides/{g['id']}/", "local": True}
+                  for g in sorted(local, key=lambda g: -(g["year"] or 0))]
+        linked += [{"title": l["title"], "year": l["year"], "href": l["url"], "local": False}
+                   for l in p["links"] if l["mms_id"] not in by_mms]
+        if not linked:
+            continue
+        prov = geo.PROVINCES.get(p["code"][:2])
+        props = {k: p[k] for k in ("id", "level", "code", "name_zh", "name_pinyin")}
+        props.update(guides=linked, province_zh=prov[0] if prov else None,
+                     province_count=prov_count.get(p["code"][:2], 0),
+                     browse=f"/search/?Province={quote(prov[0])}" if prov else None)
         features.append({"type": "Feature", "properties": props, "geometry": p["geometry"]})
     (EXPORT / "site").mkdir(parents=True, exist_ok=True)
     (EXPORT / "site" / "places.geojson").write_text(
