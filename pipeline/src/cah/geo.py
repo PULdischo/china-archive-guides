@@ -67,8 +67,8 @@ def places() -> list[dict]:
 
 # --- Provinces ---------------------------------------------------------------
 # GB/T 2260 provincial-level codes. Boundaries: geoBoundaries CHN ADM1 (public domain,
-# via Wikimedia Commons). All 34 provincial-level units are drawn; units without guides
-# are neutral gray (a deliberate cartographic choice: see the map captions / About page).
+# via Wikimedia Commons). Only provinces that have guides are drawn, with no national
+# outline: no data -> not on the map (a deliberate choice; see the map captions / About page).
 PROVINCES = {
     "11": ("北京", "Beijing"), "12": ("天津", "Tianjin"), "13": ("河北", "Hebei"), "14": ("山西", "Shanxi"),
     "15": ("内蒙古", "Inner Mongolia"), "21": ("辽宁", "Liaoning"), "22": ("吉林", "Jilin"),

@@ -18,22 +18,19 @@ layout: layout.njk
     <figure class="province-map">
       <svg viewBox="{{ provinces.viewBox }}" role="group" aria-labelledby="pm-title">
         <title id="pm-title">Provinces with archive guides, shaded by number of guides</title>
-        {% for p in provinces.provinces %}{% if p.d %}{% if p.count %}
+        {% for p in provinces.provinces %}{% if p.d %}
         <a href="/search/?Province={{ p.zh | urlencode }}" class="prov c{{ p.cls }}" aria-label="{{ p.zh }} {{ p.en }}: {{ p.count }} guides">
           <title>{{ p.zh }} {{ p.en }}: {{ p.count }} guide{% if p.count != 1 %}s{% endif %}</title>
           <path d="{{ p.d }}"/>
         </a>
-        {% else %}
-        <g class="prov none"><title>{{ p.zh }} {{ p.en }}: no guides in the collection yet</title><path d="{{ p.d }}"/></g>
-        {% endif %}{% endif %}{% endfor %}
+        {% endif %}{% endfor %}
       </svg>
       <div class="legend" aria-hidden="true">
         <span>Guides</span>
         {% set lo = 1 %}{% for b in provinces.breaks %}<span class="key"><span class="swatch c{{ loop.index0 }}"></span>{{ lo }}–{{ b }}</span>{% set lo = b + 1 %}{% endfor %}
         <span class="key"><span class="swatch c{{ provinces.breaks.length }}"></span>{{ lo }}+</span>
-        <span class="key"><span class="swatch none"></span>None yet</span>
       </div>
-      <figcaption>All provincial-level units are shown; gray ones have no guides in the collection yet.
+      <figcaption>Only provinces with guides in the collection are shown; there is no national outline.
         {{ provinces.source }}.</figcaption>
     </figure>
     <div class="province-list-wrap">

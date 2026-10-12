@@ -4,7 +4,6 @@ const el = document.getElementById("map");
 const base = el.dataset.base.replace(/\/$/, "");
 const css = getComputedStyle(document.documentElement);
 const RAMP = [0, 1, 2, 3, 4].map((i) => css.getPropertyValue(`--seq-${i}`).trim()); // home-page ramp
-const NONE = css.getPropertyValue("--seq-none").trim(); // provinces without guides
 const PLACE = { prefecture: "#0f766e", county: "#c2410c" };
 
 const map = new maplibregl.Map({
@@ -26,7 +25,6 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 function popupHtml(p) {
   const head = `<strong lang="zh">${escape(p.name_zh)}</strong> <small>${escape(p.name_pinyin)} · ${escape(p.level)}</small>`;
   if (p.level === "province") {
-    if (!p.count) return `${head}<p>No guides in the collection yet.</p>`;
     return `${head}<p>${plural(p.count, "guide")} in this province</p>` +
       `<p><a href="${escape(href(p.browse))}">View all ${plural(p.count, "guide")} →</a></p>`;
   }
@@ -45,7 +43,7 @@ map.on("load", async () => {
   const isLevel = (level) => ["==", ["get", "level"], level];
   map.addLayer({
     id: "provinces", type: "fill", source: "places", filter: isLevel("province"),
-    paint: { "fill-color": ["match", ["get", "cls"], -1, NONE, 0, RAMP[0], 1, RAMP[1], 2, RAMP[2], 3, RAMP[3], RAMP[4]],
+    paint: { "fill-color": ["match", ["get", "cls"], 0, RAMP[0], 1, RAMP[1], 2, RAMP[2], 3, RAMP[3], RAMP[4]],
       "fill-opacity": 0.55 },
   });
   map.addLayer({ id: "province-lines", type: "line", source: "places", filter: isLevel("province"),

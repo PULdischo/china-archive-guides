@@ -187,7 +187,7 @@ def run() -> None:
 
     # --- site ---
     write_json(EXPORT / "site" / "guides.json", guides)
-    # Web map. Provinces: geoBoundaries shapes for all provincial-level units,
+    # Web map. Provinces: geoBoundaries shapes for provinces with guides (no national outline),
     # popup = count + link to the province's guide list. Prefectures/counties: legacy ArcGIS
     # shapes, popup = every guide matched to the place (+ legacy catalog-only links).
     from urllib.parse import quote
@@ -197,13 +197,13 @@ def run() -> None:
     prov_count = Counter(g["province"]["code"] for g in guides if g["province"])
     breaks = [3, 7, 12, 20]  # same classes as the home-page map
     features = []
-    for pf in geo.province_features(set(geo.PROVINCES)):  # all 34; no guides -> gray, no link
+    for pf in geo.province_features({c for c in prov_count if c in geo.PROVINCES}):
         zh, en = geo.PROVINCES[pf["code"]]
-        n = prov_count.get(pf["code"], 0)
+        n = prov_count[pf["code"]]
         features.append({"type": "Feature", "geometry": pf["geometry"], "properties": {
             "id": f"province:{pf['code']}", "level": "province", "code": pf["code"], "name_zh": zh,
-            "name_pinyin": en, "count": n, "cls": sum(n > b for b in breaks) if n else -1,
-            "browse": f"/search/?Province={quote(zh)}" if n else None}})
+            "name_pinyin": en, "count": n, "cls": sum(n > b for b in breaks),
+            "browse": f"/search/?Province={quote(zh)}"}})
     for p in places:
         if not p["geometry"] or p["level"] not in ("prefecture", "county"):
             continue
@@ -225,22 +225,18 @@ def run() -> None:
         json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8")
 
-    # Home-page map: all provincial-level units, shaded by number of guides (5 ordinal classes);
-    # units without guides are neutral gray.
+    # Home-page map: provinces that have guides, shaded by count (5 ordinal classes).
+    # Provinces without guides are not drawn (no data -> not on the map; no national outline).
     geo.fetch_boundaries()
     counts = Counter(g["province"]["code"] for g in guides if g["province"])
     breaks = [3, 7, 12, 20]  # class upper bounds: 1-3, 4-7, 8-12, 13-20, 21+
-    shapes = geo.province_shapes(set(geo.PROVINCES))  # all 34 provincial-level units
+    shapes = geo.province_shapes({c for c in counts if c in geo.PROVINCES})
     provinces = []
     for code, n in counts.most_common():
         info = geo.NATIONAL if code == geo.NATIONAL["code"] else \
             {"code": code, "zh": geo.PROVINCES[code][0], "en": geo.PROVINCES[code][1]}
         provinces.append({**info, "count": n, "cls": sum(n > b for b in breaks),
                           "d": shapes["paths"].get(code), "label": shapes["labels"].get(code)})
-    for code, (zh, en) in geo.PROVINCES.items():  # drawn in neutral gray, not linked
-        if code not in counts:
-            provinces.append({"code": code, "zh": zh, "en": en, "count": 0, "cls": None,
-                              "d": shapes["paths"].get(code), "label": shapes["labels"].get(code)})
     write_json(EXPORT / "site" / "provinces.json", {
         "viewBox": shapes["viewBox"], "breaks": breaks, "provinces": provinces,
         "unplaced": sum(1 for g in guides if not g["province"]),
