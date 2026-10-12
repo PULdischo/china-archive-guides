@@ -7,14 +7,14 @@ permalink: /map/
 <h1>Map</h1>
 <p class="note">Provinces are shaded by number of guides (darker = more); click one for a link to all its guides.
   Outlined areas are prefectures (green) and counties (orange) with their own guides; click for the list.
-  Only provinces with guides are shown, with no national outline.</p>
+  Gray provinces have no guides in the collection yet.</p>
 <div id="map" data-geojson="{{ '/data/places.geojson' | htmlBaseUrl }}" data-base="{{ '/' | htmlBaseUrl }}"></div>
 
 <h2>Guides by province</h2>
 <ol class="province-list">
-  {% for p in provinces.provinces %}
+  {% for p in provinces.provinces %}{% if p.count %}
   <li><a href="/search/?Province={{ p.zh | urlencode }}"><span lang="zh">{{ p.zh }}</span> <span class="en">{{ p.en }}</span></a><span class="n">{{ p.count }}</span></li>
-  {% endfor %}
+  {% endif %}{% endfor %}
 </ol>
 <p class="note">{{ provinces.source }}. Prefecture and county shapes: Princeton East Asian Library ArcGIS layers (2024).</p>
 

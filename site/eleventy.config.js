@@ -34,6 +34,8 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("iiif", (service, size = "!400,600") => `${service}/full/${size}/0/default.jpg`);
   eleventyConfig.addFilter("json", (v) => JSON.stringify(v));
   eleventyConfig.addFilter("pageCount", (g) => g.volumes.reduce((n, v) => n + v.pages.length, 0));
+  // Nunjucks' selectattr only tests truthiness (no "equalto"), so filter by value here.
+  eleventyConfig.addFilter("whereEq", (items, key, value) => items.filter((x) => x[key] === value));
   eleventyConfig.addFilter("countOf", (guides, key) => guides.reduce((n, g) => n + g[key].length, 0));
 
   return {

@@ -18,34 +18,37 @@ layout: layout.njk
     <figure class="province-map">
       <svg viewBox="{{ provinces.viewBox }}" role="group" aria-labelledby="pm-title">
         <title id="pm-title">Provinces with archive guides, shaded by number of guides</title>
-        {% for p in provinces.provinces %}{% if p.d %}
+        {% for p in provinces.provinces %}{% if p.d %}{% if p.count %}
         <a href="/search/?Province={{ p.zh | urlencode }}" class="prov c{{ p.cls }}" aria-label="{{ p.zh }} {{ p.en }}: {{ p.count }} guides">
           <title>{{ p.zh }} {{ p.en }}: {{ p.count }} guide{% if p.count != 1 %}s{% endif %}</title>
           <path d="{{ p.d }}"/>
         </a>
-        {% endif %}{% endfor %}
+        {% else %}
+        <g class="prov none"><title>{{ p.zh }} {{ p.en }}: no guides in the collection yet</title><path d="{{ p.d }}"/></g>
+        {% endif %}{% endif %}{% endfor %}
       </svg>
       <div class="legend" aria-hidden="true">
         <span>Guides</span>
         {% set lo = 1 %}{% for b in provinces.breaks %}<span class="key"><span class="swatch c{{ loop.index0 }}"></span>{{ lo }}–{{ b }}</span>{% set lo = b + 1 %}{% endfor %}
         <span class="key"><span class="swatch c{{ provinces.breaks.length }}"></span>{{ lo }}+</span>
+        <span class="key"><span class="swatch none"></span>None yet</span>
       </div>
-      <figcaption>Only provinces with guides in the collection are shown; there is no national outline.
+      <figcaption>All provincial-level units are shown; gray ones have no guides in the collection yet.
         {{ provinces.source }}.</figcaption>
     </figure>
     <div class="province-list-wrap">
       <ol class="province-list">
-        {% for p in provinces.provinces %}
+        {% for p in provinces.provinces %}{% if p.count %}
         <li><a href="/search/?Province={{ p.zh | urlencode }}"><span lang="zh">{{ p.zh }}</span> <span class="en">{{ p.en }}</span></a><span class="n">{{ p.count }}</span></li>
-        {% endfor %}
+        {% endif %}{% endfor %}
       </ol>
       <p><a href="/map/">Open the full map (prefectures and counties) →</a></p>
     </div>
   </div>
 </section>
 
-{% set handbooks = guides | selectattr("kind", "equalto", "handbook") %}
-{% set wenshi = guides | selectattr("kind", "equalto", "wenshi") %}
+{% set handbooks = guides | whereEq("kind", "handbook") %}
+{% set wenshi = guides | whereEq("kind", "wenshi") %}
 <ul class="stats">
   <li><strong>{{ handbooks | length }}</strong> archival handbooks</li>
   <li><strong>{{ wenshi | length }}</strong> wenshi ziliao indexes</li>
@@ -53,4 +56,4 @@ layout: layout.njk
   <li><strong>{{ guides | countOf("toc") }}</strong> contents entries extracted</li>
   <li><strong>{{ guides | countOf("articles") }}</strong> wenshi articles extracted</li>
 </ul>
-<p class="note">This smoke test covers a small sample; wenshi ziliao volumes are sampled to a few pages each.</p>
+<p class="note">Wenshi ziliao indexes are so far a sample of a few pages each; all archival handbooks are included.</p>
