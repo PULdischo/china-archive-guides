@@ -223,7 +223,7 @@ We maintain the map, so retirement is in our hands:
 | 13 | Evaluation with real users | Adopted; the bake-off queries come from these sessions |
 | 14 | Accessibility/i18n (WCAG 2.2 AA, list alternative to the map, `lang` tagging) | Adopted |
 | 15 | **New:** access from mainland China. GitHub Pages, basemap CDNs, and font CDNs may be slow or blocked | Self-host fonts and JS. Test from China, and consider a mirror (e.g., a Chinese host or Princeton server) later |
-| 16 | **New:** sensitive cartography (disputed borders, Taiwan) | Use boundary data and labels deliberately; document the choice on the About page |
+| 16 | **New:** sensitive cartography (disputed borders, Taiwan) | **Decided (2026-10-11):** maps show only provinces that have guides, with no national outline. Boundaries: geoBoundaries CHN ADM1 (public domain, via Wikimedia Commons), simplified, Albers projection. The choice is stated in the map caption; repeat it on the About page |
 | 17 | **New:** cost of OCR at scale (~56k pages) | Engine chosen: DashScope. At ~4.2k tokens/page, ~56k pages ≈ 235M tokens. Price it from current DashScope rates; budget for re-runs when models or prompts change |
 
 ## 5a. Smoke-test findings (2026-10-11)

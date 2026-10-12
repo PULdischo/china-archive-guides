@@ -1,5 +1,5 @@
 // Search page: custom CJK tokens over the Pagefind index (see search-core.js).
-import { makeNormalize, search } from "./search-core.js";
+import { browse, makeNormalize, search } from "./search-core.js";
 
 const root = document.getElementById("search-app");
 const base = root.dataset.base.replace(/\/?$/, "/");
@@ -57,24 +57,31 @@ function render(res, append) {
     const href = `${base}guides/${g.guide}/`;
     list.insertAdjacentHTML("beforeend", `<li class="result">
       <h3><a href="${href}" lang="zh">${esc(g.title)}</a>${g.year ? ` <span class="year">${esc(g.year)}</span>` : ""}</h3>
-      <p class="count">${g.matches} matching ${g.matches === 1 ? "record" : "records"}</p>
+      ${g.matches == null ? "" : `<p class="count">${g.matches} matching ${g.matches === 1 ? "record" : "records"}</p>`}
       <ul class="pages">${(pages.length ? pages : g.pages).map((p) => `<li>
         <a href="${esc(p.url)}">${esc(p.meta.page || "Guide record")}</a>
         <span class="excerpt" lang="zh">${excerpt(p.meta.text.replace(/\s+/g, " "), state.q)}</span></li>`).join("")}</ul>
     </li>`);
   }
-  status.textContent = res.totalGuides
-    ? `${res.totalGuides} guide${res.totalGuides === 1 ? "" : "s"} contain “${state.q}”` +
-      (res.totalGuides > 1 ? " — ranked by number of matching pages" : "")
-    : `No guides contain “${state.q}”.`;
+  const where = Object.values(state.filters).join(", ");
+  status.textContent = res.browse
+    ? `${res.totalGuides} guide${res.totalGuides === 1 ? "" : "s"}${where ? ` — ${where}` : ""}, newest first`
+    : res.totalGuides
+      ? `${res.totalGuides} guide${res.totalGuides === 1 ? "" : "s"} contain “${state.q}”` +
+        (res.totalGuides > 1 ? " — ranked by number of matching pages" : "")
+      : `No guides contain “${state.q}”.`;
   more.hidden = !(res.next < res.totalGuides);
   state.offset = res.next ?? 0;
 }
 
 async function run(append = false) {
-  if (!state.q.trim()) { list.innerHTML = ""; status.textContent = ""; more.hidden = true; return; }
+  const filtered = Object.keys(state.filters).length > 0;
+  if (!state.q.trim() && !filtered) { list.innerHTML = ""; status.textContent = ""; more.hidden = true; return; }
   status.textContent = "Searching…";
-  const res = await search(pagefind, normalize, state.q, { filters: state.filters, offset: append ? state.offset : 0 });
+  const offset = append ? state.offset : 0;
+  const res = state.q.trim()
+    ? await search(pagefind, normalize, state.q, { filters: state.filters, offset })
+    : await browse(pagefind, state.filters, { offset }); // e.g. /search/?Province=江苏 from the home-page map
   render(res, append);
 }
 

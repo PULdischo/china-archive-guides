@@ -6,12 +6,15 @@
   --border: #ddd8cf;
   --panel: #f2efe8;
   --flag: #a16207;
+  /* Choropleth ramp, low -> high (validated ordinal ramp; dark mode has its own steps). */
+  --seq-0: #86b6ef; --seq-1: #5598e7; --seq-2: #2a78d6; --seq-3: #1c5cab; --seq-4: #104281;
   --font: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #17181a; --fg: #e8e6e1; --muted: #a3a8b0; --accent: #f59e6b;
     --border: #34363a; --panel: #222427; --flag: #facc15;
+    --seq-0: #184f95; --seq-1: #256abf; --seq-2: #3987e5; --seq-3: #6da7ec; --seq-4: #b7d3f6;
   }
 }
 [hidden] { display: none !important; }
@@ -97,3 +100,26 @@ details.extracted summary { cursor: pointer; font-weight: 600; }
 #search-app .pages a { white-space: nowrap; margin-right: .5rem; }
 #search-app mark { background: color-mix(in srgb, var(--accent) 25%, transparent); color: inherit; padding: 0 .1em; }
 #search-app .more { margin-top: 1rem; }
+
+/* Home: browse by place */
+.browse-place { margin: 2rem 0; }
+.place-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(14rem, 2fr); gap: 1.5rem; align-items: start; }
+.province-map { margin: 0; }
+.province-map svg { width: 100%; height: auto; display: block; }
+.prov path { stroke: var(--bg); stroke-width: 1.5; stroke-linejoin: round; transition: opacity .1s; }
+.prov.c0 path { fill: var(--seq-0); } .prov.c1 path { fill: var(--seq-1); } .prov.c2 path { fill: var(--seq-2); }
+.prov.c3 path { fill: var(--seq-3); } .prov.c4 path { fill: var(--seq-4); }
+.prov:hover path, .prov:focus-visible path { stroke: var(--fg); stroke-width: 2.5; }
+.prov:focus-visible { outline: none; }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .4rem; font-size: .8rem; color: var(--muted); margin-top: .5rem; }
+.legend .key { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
+.legend .swatch { width: 1.4rem; height: .7rem; border-radius: 2px; display: inline-block; }
+.legend .swatch.c0 { background: var(--seq-0); } .legend .swatch.c1 { background: var(--seq-1); }
+.legend .swatch.c2 { background: var(--seq-2); } .legend .swatch.c3 { background: var(--seq-3); }
+.legend .swatch.c4 { background: var(--seq-4); }
+.province-map figcaption { font-size: .75rem; color: var(--muted); margin-top: .4rem; }
+.province-list { list-style: none; padding: 0; margin: 0; columns: 2 10rem; column-gap: 1.25rem; font-size: .9rem; }
+.province-list li { display: flex; justify-content: space-between; gap: .5rem; break-inside: avoid; padding: .1rem 0; border-bottom: 1px solid var(--border); }
+.province-list .en { color: var(--muted); font-size: .8rem; }
+.province-list .n { font-variant-numeric: tabular-nums; color: var(--muted); }
+@media (max-width: 760px) { .place-grid { grid-template-columns: 1fr; } }

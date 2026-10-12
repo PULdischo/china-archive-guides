@@ -166,6 +166,7 @@ def run() -> None:
                                   "ocr_engine": p["ocr_engine"], "ocr_mean_score": p["ocr_mean_score"],
                                   "ocr_notes": p["ocr_notes"]})
 
+        g["province"] = geo.province_of(g)
         g["title_pinyin"] = pinyin(g["title_zh"])
         g["title_zh_trad"] = s2t.convert(g["title_zh"] or "")
         # A single known year counts as a one-year span.
@@ -208,6 +209,22 @@ def run() -> None:
     (EXPORT / "site" / "places.geojson").write_text(
         json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8")
+
+    # Home-page map: provinces that have guides, shaded by count (5 ordinal classes).
+    geo.fetch_boundaries()
+    counts = Counter(g["province"]["code"] for g in guides if g["province"])
+    breaks = [3, 7, 12, 20]  # class upper bounds: 1-3, 4-7, 8-12, 13-20, 21+
+    shapes = geo.province_shapes({c for c in counts if c in geo.PROVINCES})
+    provinces = []
+    for code, n in counts.most_common():
+        info = geo.NATIONAL if code == geo.NATIONAL["code"] else \
+            {"code": code, "zh": geo.PROVINCES[code][0], "en": geo.PROVINCES[code][1]}
+        provinces.append({**info, "count": n, "cls": sum(n > b for b in breaks),
+                          "d": shapes["paths"].get(code), "label": shapes["labels"].get(code)})
+    write_json(EXPORT / "site" / "provinces.json", {
+        "viewBox": shapes["viewBox"], "breaks": breaks, "provinces": provinces,
+        "unplaced": sum(1 for g in guides if not g["province"]),
+        "source": "Province boundaries: geoBoundaries (CHN ADM1, public domain, from Wikimedia Commons)"})
 
     # --- report ---
     mapped_mms = {l["mms_id"] for p in places for l in p["links"]}

@@ -81,3 +81,13 @@ export async function search(pagefind, normalize, query,
   }
   return { guides, totalGuides: counts.length, totalPages: r.results.length, next };
 }
+
+// Browse by filters with no query: guide records only, newest first.
+export async function browse(pagefind, filters, { offset = 0, want = 20 } = {}) {
+  const r = await pagefind.search(null, { filters: { ...filters, record: "guide" }, sort: { year: "desc" } });
+  const data = await Promise.all(r.results.slice(offset, offset + want).map((x) => x.data()));
+  return {
+    guides: data.map((d) => ({ guide: d.meta.guide, title: d.meta.title, year: d.meta.year, matches: null, pages: [] })),
+    totalGuides: r.results.length, next: offset + data.length, browse: true,
+  };
+}

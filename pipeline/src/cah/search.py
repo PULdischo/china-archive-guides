@@ -77,8 +77,8 @@ def index_text(text: str) -> str:
 
 def _filters(g: dict) -> dict:
     f = {"Type": [{"handbook": "Archival handbook 档案馆指南", "wenshi": "Wenshi ziliao index 文史资料"}[g["kind"]]]}
-    if g["places"]:
-        f["Province"] = sorted({p["province_zh"] or p["name_zh"] for p in g["places"]})
+    if g.get("province"):
+        f["Province"] = [g["province"]["zh"]]
     if g.get("year"):
         f["Published"] = [f"{g['year'] // 10 * 10}s"]
     if g.get("fonds_decades"):
@@ -93,7 +93,8 @@ def build_records(guides: list[dict]) -> list[dict]:
                                             " ".join(lazy_pinyin(g["title_zh"] or ""))]))
         # "guide" lets the browser get per-guide match counts without loading fragments.
         base = {"filters": {**_filters(g), "guide": [g["id"]]}, "sort": {"year": str(g.get("year") or 0)}}
-        recs.append({**base, "url": f"/guides/{g['id']}/",
+        # "record" separates guide records (browsing by filter, no query) from page records.
+        recs.append({**base, "filters": {**base["filters"], "record": ["guide"]}, "url": f"/guides/{g['id']}/",
                      "content": index_text(title_text),
                      "meta": {"title": g["title_zh"], "year": str(g.get("year") or ""), "guide": g["id"], "kind": "guide",
                               "text": title_text}})
@@ -103,7 +104,8 @@ def build_records(guides: list[dict]) -> list[dict]:
                 if not text.strip():
                     continue
                 label = f"{v['label']} · " if g["kind"] == "wenshi" else ""
-                recs.append({**base, "url": f"/guides/{g['id']}/#p{p['n']}",
+                recs.append({**base, "filters": {**base["filters"], "record": ["page"]},
+                             "url": f"/guides/{g['id']}/#p{p['n']}",
                              "content": index_text(text),
                              "meta": {"title": g["title_zh"], "year": str(g.get("year") or ""), "guide": g["id"], "kind": "page",
                                       "page": f"{label}Scan {p['n']}", "text": text}})

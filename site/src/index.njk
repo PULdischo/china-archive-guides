@@ -12,6 +12,38 @@ layout: layout.njk
   </form>
 </section>
 
+<section class="browse-place" aria-labelledby="browse-place-h">
+  <h2 id="browse-place-h">Browse by place</h2>
+  <div class="place-grid">
+    <figure class="province-map">
+      <svg viewBox="{{ provinces.viewBox }}" role="group" aria-labelledby="pm-title">
+        <title id="pm-title">Provinces with archive guides, shaded by number of guides</title>
+        {% for p in provinces.provinces %}{% if p.d %}
+        <a href="/search/?Province={{ p.zh | urlencode }}" class="prov c{{ p.cls }}" aria-label="{{ p.zh }} {{ p.en }}: {{ p.count }} guides">
+          <title>{{ p.zh }} {{ p.en }}: {{ p.count }} guide{% if p.count != 1 %}s{% endif %}</title>
+          <path d="{{ p.d }}"/>
+        </a>
+        {% endif %}{% endfor %}
+      </svg>
+      <div class="legend" aria-hidden="true">
+        <span>Guides</span>
+        {% set lo = 1 %}{% for b in provinces.breaks %}<span class="key"><span class="swatch c{{ loop.index0 }}"></span>{{ lo }}–{{ b }}</span>{% set lo = b + 1 %}{% endfor %}
+        <span class="key"><span class="swatch c{{ provinces.breaks.length }}"></span>{{ lo }}+</span>
+      </div>
+      <figcaption>Only provinces with guides in the collection are shown; there is no national outline.
+        {{ provinces.source }}.</figcaption>
+    </figure>
+    <div class="province-list-wrap">
+      <ol class="province-list">
+        {% for p in provinces.provinces %}
+        <li><a href="/search/?Province={{ p.zh | urlencode }}"><span lang="zh">{{ p.zh }}</span> <span class="en">{{ p.en }}</span></a><span class="n">{{ p.count }}</span></li>
+        {% endfor %}
+      </ol>
+      <p><a href="/map/">Open the full map (prefectures and counties) →</a></p>
+    </div>
+  </div>
+</section>
+
 {% set handbooks = guides | selectattr("kind", "equalto", "handbook") %}
 {% set wenshi = guides | selectattr("kind", "equalto", "wenshi") %}
 <ul class="stats">
