@@ -87,29 +87,38 @@ def _filters(g: dict) -> dict:
 
 
 def build_records(guides: list[dict]) -> list[dict]:
+    """One record per guide (or wenshi volume) and per scanned page. The "guide" filter is the
+    ranking unit: a handbook, or for wenshi ziliao a locality volume (an item can span 4,000+
+    pages). meta.href is the unit's page on the site."""
     recs = []
     for g in guides:
         title_text = " ".join(filter(None, [g["title_zh"], g.get("title_romanized"),
                                             " ".join(lazy_pinyin(g["title_zh"] or ""))]))
-        # "guide" lets the browser get per-guide match counts without loading fragments.
-        base = {"filters": {**_filters(g), "guide": [g["id"]]}, "sort": {"year": str(g.get("year") or 0)}}
-        # "record" separates guide records (browsing by filter, no query) from page records.
-        recs.append({**base, "filters": {**base["filters"], "record": ["guide"]}, "url": f"/guides/{g['id']}/",
-                     "content": index_text(title_text),
-                     "meta": {"title": g["title_zh"], "year": str(g.get("year") or ""), "guide": g["id"], "kind": "guide",
-                              "text": title_text}})
-        for v in g["volumes"]:
-            for p in v["pages"]:
-                text = "\n".join(p.get("rows") or [])
-                if not text.strip():
-                    continue
-                label = f"{v['label']} · " if g["kind"] == "wenshi" else ""
-                recs.append({**base, "filters": {**base["filters"], "record": ["page"]},
-                             "url": f"/guides/{g['id']}/#p{p['n']}",
-                             "content": index_text(text),
-                             "meta": {"title": g["title_zh"], "year": str(g.get("year") or ""), "guide": g["id"], "kind": "page",
-                                      "page": f"{label}Scan {p['n']}", "text": text}})
+        filters, sort = _filters(g), {"year": str(g.get("year") or 0)}
+        units = ([(g["id"], f"/guides/{g['id']}/", g["title_zh"], g["volumes"])] if g["kind"] != "wenshi" else
+                 [(v["id"], f"/wenshi/{v['id']}/", f"{v['label']} · {short_title(g)}", [v]) for v in g["volumes"]])
+        for unit_id, href, title, vols in units:
+            base = {"filters": {**filters, "guide": [unit_id]}, "sort": sort}
+            unit_text = title_text if g["kind"] != "wenshi" else f"{title} {title_text}"
+            meta = {"title": title, "year": str(g.get("year") or ""), "guide": unit_id, "href": href}
+            # "record" separates unit records (browsing by filter, no query) from page records.
+            recs.append({**base, "filters": {**base["filters"], "record": ["guide"]}, "url": href,
+                         "content": index_text(unit_text), "meta": {**meta, "kind": "guide", "text": unit_text}})
+            for v in vols:
+                for p in v["pages"]:
+                    text = "\n".join(p.get("rows") or [])
+                    if not text.strip():
+                        continue
+                    recs.append({**base, "filters": {**base["filters"], "record": ["page"]},
+                                 "url": f"{href}#p{p['n']}", "content": index_text(text),
+                                 "meta": {**meta, "kind": "page", "page": f"Scan {p['n']}", "text": text}})
     return recs
+
+
+def short_title(g: dict) -> str:
+    """'中国文史资料总目录电子版. 四川卷' -> '四川卷'."""
+    t = g["title_zh"] or ""
+    return t.split(". ")[-1] if ". " in t else t
 
 
 # Topical queries a researcher might type (2-4 characters).
@@ -120,8 +129,12 @@ TOPICS = ["粮食局", "邮政", "煤矿", "商会", "教育局", "土地改革"
 
 def build_eval(guides: list[dict], seed: int = 7) -> list[dict]:
     """Queries with ground truth: guides whose normalized page text contains the normalized query."""
-    corpus = {g["id"]: normalize("".join("".join(p.get("rows") or []) for v in g["volumes"] for p in v["pages"]))
-              for g in guides}
+    # Ground truth at the same unit as search ranking: a handbook, or a wenshi locality volume.
+    corpus = {}
+    for g in guides:
+        units = [(g["id"], g["volumes"])] if g["kind"] != "wenshi" else [(v["id"], [v]) for v in g["volumes"]]
+        for unit_id, vols in units:
+            corpus[unit_id] = normalize("".join("".join(p.get("rows") or []) for v in vols for p in v["pages"]))
     titles = {g["id"]: " ".join(filter(None, [g["title_zh"], g.get("title_romanized")])).lower() for g in guides}
 
     def truth(q):

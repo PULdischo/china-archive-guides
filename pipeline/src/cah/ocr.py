@@ -47,6 +47,9 @@ class RapidOCREngine:
         self.version = f"rapidocr-onnxruntime {importlib.metadata.version('rapidocr-onnxruntime')}"
         self._ocr = None
 
+    def version_for(self, guide: dict) -> str:
+        return self.version
+
     def __call__(self, img_path, guide: dict) -> dict:
         from rapidocr_onnxruntime import RapidOCR
 
@@ -141,10 +144,23 @@ Return one JSON object: {{"page_type": str, "html": "<the whole page transcribed
         except json.JSONDecodeError as e:
             return {**meta, "error": f"unparseable JSON: {e}", "raw": raw}, None
 
+    def version_for(self, guide: dict) -> str:
+        """Cache version: wenshi pages use their own HTML-only prompt (cah.wenshi)."""
+        if guide["kind"] == "wenshi":
+            from .wenshi import PROMPT_V3_VERSION
+            return f"dashscope {self.model} {PROMPT_V3_VERSION}"
+        return self.version
+
     def __call__(self, img_path, guide: dict) -> dict:
         b64 = base64.b64encode(img_path.read_bytes()).decode()
         kind = KIND_DESC[guide["kind"]]
-        r = self._post(b64, self.PROMPT.format(kind=kind, rules=self.HTML_RULES))
+        if guide["kind"] == "wenshi":
+            from .wenshi import PROMPT_V3
+            prompt, retry = PROMPT_V3, PROMPT_V3  # HTML only; articles are parsed at export
+        else:
+            prompt = self.PROMPT.format(kind=kind, rules=self.HTML_RULES)
+            retry = self.PROMPT_HTML_ONLY.format(kind=kind, rules=self.HTML_RULES)
+        r = self._post(b64, prompt)
         if r.status_code == 400 and "inappropriate content" in r.text:
             # DashScope content moderation. Unpredictable on archival material (e.g. fonds on 1989);
             # record it so the page isn't retried every run and export falls back to RapidOCR.
@@ -153,8 +169,7 @@ Return one JSON object: {{"page_type": str, "html": "<the whole page transcribed
             raise RuntimeError(f"DashScope {r.status_code}: {r.text[:300]}")
         meta, parsed = self._parse(r)
         if parsed is None:
-            r2 = self._post(b64, self.PROMPT_HTML_ONLY.format(kind=kind, rules=self.HTML_RULES),
-                            presence_penalty=0.5)
+            r2 = self._post(b64, retry, presence_penalty=0.5)
             if r2.status_code < 400:
                 meta2, parsed = self._parse(r2)
                 usage = [u for u in (meta.get("usage"), meta2.get("usage")) if u]
@@ -184,11 +199,11 @@ def run(engine_name: str | None = None, fallback_only: bool = False) -> None:
             continue
         img_hash = hashlib.sha256(img.read_bytes()).hexdigest()
         cached = load(engine.name, p["key"])
-        if cached and cached["image_sha256"] == img_hash and cached["engine"] == engine.version \
+        if cached and cached["image_sha256"] == img_hash and cached["engine"] == engine.version_for(g) \
                 and ("error" not in cached or cached.get("blocked")):
             continue
         todo.append((g, p, img, img_hash))
-    print(f"  {engine.version}: {len(todo)} pages to OCR")
+    print(f"  {engine.name}: {len(todo)} pages to OCR")
 
     def work(item):
         g, p, img, img_hash = item
@@ -197,7 +212,7 @@ def run(engine_name: str | None = None, fallback_only: bool = False) -> None:
         except Exception as e:  # keep going; failed pages are retried next run
             result = {"error": str(e)}
         write_json(cache_path(engine.name, p["key"]),
-                   {"engine": engine.version, "image_sha256": img_hash, "canvas_id": p["canvas_id"], **result})
+                   {"engine": engine.version_for(g), "image_sha256": img_hash, "canvas_id": p["canvas_id"], **result})
         return result
 
     errors, blocked, tokens = 0, 0, 0

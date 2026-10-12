@@ -1,10 +1,10 @@
 # Pipeline run report
 
 - Guides: 345 ({'handbook': 343, 'wenshi': 2})
-- Pages: 6192; engines: {'dashscope qwen3-vl-plus prompt-v2': 6127, 'rapidocr-onnxruntime 1.4.4': 65}
-- RapidOCR mean line confidence: 0.968
+- Pages: 6192; engines: {'dashscope qwen3-vl-plus prompt-v2': 6097, 'rapidocr-onnxruntime 1.4.4': 64, 'dashscope qwen3-vl-plus wenshi-v3': 31}
+- RapidOCR mean line confidence: 0.969
 - Pages blocked by DashScope moderation (RapidOCR fallback used): 55
-- Extracted fonds rows: 55249; contents entries: 60147; wenshi article rows: 529
+- Extracted fonds rows: 55249; contents entries: 60147; wenshi article rows: 525
 - Legacy map: 253 places, 311 linked catalog records
 
 | Guide | Kind | Year (raw) | Place match | Places | Pages | Fonds | Contents | Articles |
@@ -352,5 +352,5 @@
 | t435gp52v 四川省档案馆指南 | handbook | 2002 (2002) | catalog_id | 四川 | 87 | 891 | 825 | 0 |
 | 1257b278w 上海市档案馆指南 = Guide to shanghai city archives | handbook | 1999 (1999) | admin_code | 上海市 | 91 | 1461 | 612 | 0 |
 | bz60d5784 江苏档案要览 | handbook | 1994 (1994-1299, malformed) | catalog_id | 江苏 | 89 | 0 | 3078 | 0 |
-| dc3r075544d 中国文史资料总目录电子版. 四川卷 | wenshi | 2010 (2010-1199, malformed) | place_name | 四川 | 16 | 0 | 0 | 249 |
-| dcmg74qz71f 中国文史资料总目录电子版. 贵州卷 | wenshi | 2011 (2011-1299, malformed) | — | — | 16 | 0 | 0 | 280 |
+| dc3r075544d 中国文史资料总目录电子版. 四川卷 | wenshi | 2010 (2010-1199, malformed) | place_name | 四川 | 16 | 0 | 0 | 244 |
+| dcmg74qz71f 中国文史资料总目录电子版. 贵州卷 | wenshi | 2011 (2011-1299, malformed) | — | — | 16 | 0 | 0 | 281 |

@@ -54,7 +54,7 @@ function render(res, append) {
   if (!append) list.innerHTML = "";
   for (const g of res.guides) {
     const pages = g.pages.filter((p) => p.meta.kind === "page");
-    const href = `${base}guides/${g.guide}/`;
+    const href = base + (g.href || `/guides/${g.guide}/`).replace(/^\//, "");
     list.insertAdjacentHTML("beforeend", `<li class="result">
       <h3><a href="${href}" lang="zh">${esc(g.title)}</a>${g.year ? ` <span class="year">${esc(g.year)}</span>` : ""}</h3>
       ${g.matches == null ? "" : `<p class="count">${g.matches} matching ${g.matches === 1 ? "record" : "records"}</p>`}

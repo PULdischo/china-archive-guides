@@ -91,15 +91,13 @@ def page_content(g: dict, p: dict, ctx: dict, engines: list[str] | None = None) 
                           {"fonds": [], "toc": [], "articles": extract.articles(rows, ctx)})
             return {"rows": rows, "html": None, "engine": o["engine"], "extraction": "rules", "score": score,
                     "notes": notes, **structured}
-        # VLM output: carry series/issue across pages, which a single page may not show.
-        articles = []
-        for a in o.get("articles", []):
-            if a.get("series"):
-                ctx["series"], ctx["issue"] = a["series"], a.get("issue")
-            elif a.get("issue"):
-                ctx["issue"] = a["issue"]
-            articles.append({**a, "series": a.get("series") or ctx.get("series"),
-                             "issue": a.get("issue") or ctx.get("issue")})
+        if g["kind"] == "wenshi":
+            # Articles come from the HTML (more complete than v2's JSON list); ctx carries the
+            # series/issue headings across the pages of a volume.
+            from .wenshi import parse_articles
+            articles = parse_articles(o.get("html"), ctx)
+        else:
+            articles = []
         fonds = [{**f, "counts": f.get("counts") or []} for f in o.get("fonds", [])]
         # Prompt v2+ returns an HTML transcription; v1 returned plain lines.
         html = markup.sanitize(o["html"]) if o.get("html") else None
@@ -122,6 +120,27 @@ def page_content(g: dict, p: dict, ctx: dict, engines: list[str] | None = None) 
                 "page_type": o.get("page_type")}
     return {"rows": [], "html": None, "engine": None, "extraction": None, "score": None, "notes": notes,
             "fonds": [], "toc": [], "articles": []}
+
+
+SUFFIX = re.compile(r"(市|县|区|地区|自治州|自治县|盟|旗|政协|文史资料.*)$")
+
+
+def match_volumes(guides: list[dict], places: list[dict]) -> dict[str, list]:
+    """Wenshi locality volumes -> legacy map places (same province, same name minus admin suffix).
+    Sets v["place"] and returns {place id: [(guide, volume)]}."""
+    out = {}
+    for g in guides:
+        if g["kind"] != "wenshi" or not g.get("province"):
+            continue
+        prov = g["province"]["code"]
+        candidates = [p for p in places if p["level"] in ("prefecture", "county") and p["code"][:2] == prov]
+        for v in g["volumes"]:
+            name = SUFFIX.sub("", v["label"] or "")
+            hit = next((p for p in candidates if name and SUFFIX.sub("", p["name_zh"] or "") == name), None)
+            v["place"] = {k: hit[k] for k in ("id", "level", "code", "name_zh")} if hit else None
+            if hit:
+                out.setdefault(hit["id"], []).append((g, v))
+    return out
 
 
 def run() -> None:
@@ -157,7 +176,8 @@ def run() -> None:
                     g["toc"].append(rec)
                     toc_rows.append(rec)
                 for i, a in enumerate(c["articles"]):
-                    rec = {"id": f"{p['key']}-a{i}", **a, "locality": v["label"], **ref, **prov}
+                    rec = {"id": f"{p['key']}-a{i}", **a, "locality": v["label"], "volume_id": v["id"],
+                           **ref, **prov}
                     g["articles"].append(rec)
                     article_rows.append(rec)
                 page_rows.append({**ref, "key": p["key"], "volume": v["label"], "label": p["label"],
@@ -186,6 +206,7 @@ def run() -> None:
     write_jsonl("places", [{k: v for k, v in p.items() if k != "geometry"} for p in places])
 
     # --- site ---
+    volume_places = match_volumes(guides, places)  # before writing: sets v["place"]
     write_json(EXPORT / "site" / "guides.json", guides)
     # Web map. Provinces: geoBoundaries shapes for provinces with guides (no national outline),
     # popup = count + link to the province's guide list. Prefectures/counties: legacy ArcGIS
@@ -210,6 +231,8 @@ def run() -> None:
         local = [g for g in guides if p["id"] in {x["id"] for x in g["places"]}]
         linked = [{"title": g["title_zh"], "year": g["year"], "href": f"/guides/{g['id']}/", "local": True}
                   for g in sorted(local, key=lambda g: -(g["year"] or 0))]
+        linked += [{"title": f"{v['label']} · 文史资料总目录", "year": g["year"], "href": f"/wenshi/{v['id']}/",
+                    "local": True} for g, v in volume_places.get(p["id"], [])]
         linked += [{"title": l["title"], "year": l["year"], "href": l["url"], "local": False}
                    for l in p["links"] if l["mms_id"] not in by_mms]
         if not linked:

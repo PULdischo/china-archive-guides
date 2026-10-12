@@ -139,6 +139,7 @@ def build(staged: bool = False) -> list[dict]:
                 label = m.get("label")
                 volumes.append({
                     "index": vi,
+                    "id": m["@id"].rstrip("/").split("/")[-2],  # Figgy resource UUID (stable)
                     "label": label[0] if isinstance(label, list) else label,
                     "manifest": m["@id"],
                     "canvas_count": len(m["sequences"][0]["canvases"]),

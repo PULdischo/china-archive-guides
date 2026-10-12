@@ -1,0 +1,19 @@
+{# One scanned page: thumbnail linking to the Figgy viewer, and its transcription. Expects p, title. #}
+<section class="page">
+  <h3 id="p{{ p.n }}">Scan {{ p.n }} <small>(label “{{ p.label }}”)</small></h3>
+  <figure>
+    <a href="{{ p.viewer_url }}" title="Open this page in the Figgy viewer">
+      <img loading="lazy" src="{{ p.image_service | iiif('!300,450') }}" alt="Scan {{ p.n }} of {{ title }}" width="300">
+    </a>
+    <figcaption><a href="{{ p.viewer_url }}">Viewer</a> · <a href="{{ p.image_service | iiif('full') }}">Full image</a></figcaption>
+  </figure>
+  <div class="ocr" lang="zh">
+    {% if p.ocr_engine %}<p class="engine" lang="en">Machine transcription{% if p.page_type %} ({{ p.page_type | replace("_", " ") }}){% endif %} · {{ p.ocr_engine }}{% for n in p.ocr_notes %} · {{ n }}{% endfor %}</p>{% endif %}
+    {% if p.html %}
+      {# Sanitized in the pipeline (cah.markup): structural tags only. #}
+      <div class="transcript">{{ p.html | safe }}</div>
+    {% else %}
+      {% for row in p.rows %}<p>{{ row }}</p>{% else %}<p class="note">No OCR text yet.</p>{% endfor %}
+    {% endif %}
+  </div>
+</section>

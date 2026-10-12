@@ -1,0 +1,45 @@
+---
+layout: layout.njk
+pagination:
+  data: wenshiVolumes
+  size: 1
+  alias: v
+permalink: "/wenshi/{{ v.id }}/"
+eleventyComputed:
+  title: "{{ v.label }} · {{ v.item.short }}"
+---
+<p class="kind">{{ site.kindLabels.wenshi }} · <a href="/guides/{{ v.item.id }}/" lang="zh">{{ v.item.title }}</a></p>
+<h1 lang="zh">{{ v.label }}</h1>
+
+<div class="links-back">
+  <a class="button" href="{{ v.item.urls.dpul }}">View original in DPUL</a>
+  <a href="{{ v.pages[0].viewer_url if v.pages.length else v.item.urls.dpul }}">This volume in the viewer</a>
+  <a href="{{ v.manifest }}">IIIF manifest</a>
+</div>
+
+<dl class="meta">
+  <dt>Index</dt><dd lang="zh"><a href="/guides/{{ v.item.id }}/">{{ v.item.title }}</a> ({{ v.item.year }})</dd>
+  <dt>Province</dt><dd lang="zh">{% if v.item.province %}<a href="/search/?Province={{ v.item.province.zh | urlencode }}">{{ v.item.province.zh }}</a>{% else %}—{% endif %}</dd>
+  <dt>Place</dt><dd lang="zh">{% if v.place %}<a href="/map/#{{ v.place.id }}">{{ v.place.name_zh }}</a>{% else %}—{% endif %}</dd>
+  <dt>Scans</dt><dd>{{ v.pages.length }}{% if v.pages.length < v.canvas_count %} of {{ v.canvas_count }} (sample){% endif %}</dd>
+  <dt>Rights</dt><dd>{{ v.item.rights }}</dd>
+</dl>
+
+{% if v.articles.length %}
+<details class="extracted" open>
+  <summary>Articles — {{ v.articles.length }} entries (machine-extracted, provisional)</summary>
+  <table class="data">
+    <thead><tr><th>Series / issue</th><th>Title</th><th>Author</th><th>p.</th><th>Scan</th></tr></thead>
+    <tbody>{% for a in v.articles %}
+      <tr><td lang="zh">{{ a.series }}{% if a.issue %} 第{{ a.issue }}辑{% endif %}</td>
+        <td lang="zh">{{ a.title }}</td><td lang="zh">{{ a.author }}</td><td>{{ a.page }}</td><td><a href="#p{{ a.page_n }}">{{ a.page_n }}</a></td></tr>
+    {% endfor %}</tbody>
+  </table>
+</details>
+{% endif %}
+
+<h2>Pages</h2>
+{% set title = v.label %}
+{% for p in v.pages %}
+  {% include "page-section.njk" %}
+{% endfor %}

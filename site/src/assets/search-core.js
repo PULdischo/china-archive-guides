@@ -75,7 +75,7 @@ export async function search(pagefind, normalize, query,
       const gr = await pagefind.search(q, { filters: { ...filters, guide: id } });
       const data = await Promise.all(gr.results.slice(0, pagesPerGuide * 2).map((x) => x.data()));
       const pages = data.filter(verify).slice(0, pagesPerGuide);
-      return pages.length ? { guide: id, title: pages[0].meta.title, year: pages[0].meta.year, matches: n, pages } : null;
+      return pages.length ? { guide: id, href: pages[0].meta.href, title: pages[0].meta.title, year: pages[0].meta.year, matches: n, pages } : null;
     }));
     guides.push(...found.filter(Boolean));
   }
@@ -87,7 +87,7 @@ export async function browse(pagefind, filters, { offset = 0, want = 20 } = {}) 
   const r = await pagefind.search(null, { filters: { ...filters, record: "guide" }, sort: { year: "desc" } });
   const data = await Promise.all(r.results.slice(offset, offset + want).map((x) => x.data()));
   return {
-    guides: data.map((d) => ({ guide: d.meta.guide, title: d.meta.title, year: d.meta.year, matches: null, pages: [] })),
+    guides: data.map((d) => ({ guide: d.meta.guide, href: d.meta.href, title: d.meta.title, year: d.meta.year, matches: null, pages: [] })),
     totalGuides: r.results.length, next: offset + data.length, browse: true,
   };
 }
