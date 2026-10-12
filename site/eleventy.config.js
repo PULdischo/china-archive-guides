@@ -12,6 +12,24 @@ export default function (eleventyConfig) {
     "node_modules/maplibre-gl/dist/maplibre-gl.css": "assets/vendor/maplibre-gl.css",
   });
 
+  // Link policy: originals and other outside sites open in a new tab (researchers keep the
+  // transcription open beside the scan; also the norm on Chinese sites), marked visibly and for
+  // screen readers (WCAG G201). Links within the site stay in the same tab so Back keeps
+  // search state. Internal links are root-relative, so an absolute http(s) URL is external.
+  // assets/map.js applies the same policy to links it builds.
+  const EXTERNAL_LINK = /<a\b([^>]*?)\bhref="(https?:\/\/[^"]+)"([^>]*)>([\s\S]*?)<\/a>/g;
+  const NEW_TAB_TEXT = '<span class="visually-hidden"> (opens in a new tab, <span lang="zh">在新标签页打开</span>)</span>';
+  const NEW_TAB_ICON = '<span class="ext" aria-hidden="true">↗</span>';
+  eleventyConfig.addTransform("external-links", function (content) {
+    if (!(this.page.outputPath || "").endsWith(".html")) return content;
+    return content.replace(EXTERNAL_LINK, (match, pre, href, post, inner) => {
+      if (/\btarget=/.test(pre + post)) return match;
+      const textLink = inner.replace(/<[^>]+>/g, "").trim() !== ""; // no icon on image-only links
+      return `<a${pre}href="${href}"${post} target="_blank" rel="noopener">${inner}` +
+        `${textLink ? NEW_TAB_ICON : ""}${NEW_TAB_TEXT}</a>`;
+    });
+  });
+
   eleventyConfig.addFilter("decade", (year) => (year ? `${Math.floor(year / 10) * 10}s` : null));
   eleventyConfig.addFilter("iiif", (service, size = "!400,600") => `${service}/full/${size}/0/default.jpg`);
   eleventyConfig.addFilter("json", (v) => JSON.stringify(v));

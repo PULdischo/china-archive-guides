@@ -13,6 +13,10 @@ map.addControl(new maplibregl.NavigationControl(), "top-right");
 
 const escape = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const href = (h) => (h.startsWith("/") ? base + h : h);
+// Same link policy as the site build (eleventy.config.js): outside links open in a new tab, marked.
+const NEW_TAB = ' target="_blank" rel="noopener"';
+const NEW_TAB_LABEL = '<span class="ext" aria-hidden="true">↗</span>' +
+  '<span class="visually-hidden"> (opens in a new tab, <span lang="zh">在新标签页打开</span>)</span>';
 
 map.on("load", async () => {
   const data = await (await fetch(el.dataset.geojson)).json();
@@ -37,7 +41,7 @@ map.on("load", async () => {
     const p = f.properties;
     const guides = typeof p.guides === "string" ? JSON.parse(p.guides) : p.guides;
     const items = guides.map((g) =>
-      `<li><a href="${escape(href(g.href))}">${escape(g.title)}</a> ${g.year ?? ""}${g.local ? "" : " <small>(catalog)</small>"}</li>`).join("");
+      `<li><a href="${escape(href(g.href))}"${g.local ? "" : NEW_TAB}>${escape(g.title)}${g.local ? "" : NEW_TAB_LABEL}</a> ${g.year ?? ""}${g.local ? "" : " <small>(catalog)</small>"}</li>`).join("");
     new maplibregl.Popup({ maxWidth: "320px" }).setLngLat(lngLat)
       .setHTML(`<strong lang="zh">${escape(p.name_zh)}</strong> <small>${escape(p.name_pinyin)} · ${escape(p.level)}</small><ul>${items}</ul>`)
       .addTo(map);

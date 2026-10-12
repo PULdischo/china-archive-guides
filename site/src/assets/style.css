@@ -75,6 +75,7 @@ details.extracted summary { cursor: pointer; font-weight: 600; }
 .maplibregl-popup-content { color: #1f2328; }
 .maplibregl-popup-content ul { padding-left: 1.1rem; margin: .4rem 0 0; }
 .place-list { columns: 2 18rem; }
+.ext { font-size: .8em; margin-left: .15em; text-decoration: none; display: inline-block; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 @media (max-width: 640px) {
   .page { grid-template-columns: 1fr; }
