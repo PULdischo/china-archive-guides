@@ -20,14 +20,15 @@ const t2s = await (await fetch(`${base}pagefind/t2s.json`)).json();
 const normalize = makeNormalize(t2s);
 const fold = (c) => (t2s[c] ?? c).toLowerCase();
 
-// Facet selects with (unfiltered) counts.
+// Facet selects. No counts: Pagefind counts indexed pages, which would read as guide counts.
 const all = await pagefind.filters();
 for (const name of FACETS) {
-  const values = Object.entries(all[name] || {}).sort((a, b) => a[0].localeCompare(b[0], "zh"));
+  const values = Object.entries(all[name] || {})
+    .sort((a, b) => (b[0].startsWith("Before") - a[0].startsWith("Before")) || a[0].localeCompare(b[0], "zh"));
   if (!values.length) continue;
   filterBox.insertAdjacentHTML("beforeend",
     `<label>${esc(name)} <select name="${esc(name)}"><option value="">All</option>${values
-      .map(([v, n]) => `<option value="${esc(v)}">${esc(v)} (${n})</option>`).join("")}</select></label>`);
+      .map(([v]) => `<option value="${esc(v)}">${esc(v)}</option>`).join("")}</select></label>`);
 }
 
 // Excerpt around the first match of the query in the original text, highlighted.

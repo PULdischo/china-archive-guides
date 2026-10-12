@@ -20,6 +20,47 @@ def tidy(row: str) -> str:
     return re.sub(r"\s*[…⋯‥·.。]{3,}\s*", " … ", row).strip()
 
 
+# Plausible fonds dates: from the founding of the Ming (earliest material in local archives)
+# to the present.
+EARLIEST, LATEST = 1368, 2030
+
+
+def _year(v) -> int | None:
+    if isinstance(v, str) and v.strip().isdigit():
+        v = int(v)
+    return v if isinstance(v, int) else None
+
+
+def clean_fonds_dates(f: dict) -> dict:
+    """Plausible date range for an extracted fonds row; raw values and a note are kept."""
+    a, b = _year(f.get("date_start")), _year(f.get("date_end"))
+    notes = []
+    if a is not None and b is not None and 1 <= a <= 38 and 1 <= b <= 38:
+        a, b = a + 1911, b + 1911  # 民国纪年: Republic of China years 1-38 = 1912-1949
+        notes.append("Republican-era years converted")
+    if a is not None and not EARLIEST <= a <= LATEST:
+        a = None
+        notes.append("implausible start year dropped")
+    if b is not None and not EARLIEST <= b <= LATEST:
+        b = None
+        notes.append("implausible end year dropped")
+    if a is not None and b is not None and a > b:
+        a, b = b, a
+        notes.append("start and end swapped")
+    return {"date_start": a, "date_end": b, "date_start_raw": f.get("date_start"),
+            "date_end_raw": f.get("date_end"), "date_note": "; ".join(notes) or None}
+
+
+def cover_buckets(spans: list[tuple[int, int]]) -> list[str]:
+    """Search facet values: one bucket for material before 1900, then decades."""
+    out = set()
+    for a, b in spans:
+        if a < 1900:
+            out.add("Before 1900")
+        out.update(f"{d}s" for d in range(max(a, 1900) // 10 * 10, b + 1, 10) if b >= 1900)
+    return sorted(out, key=lambda v: (v != "Before 1900", v))
+
+
 def pinyin(text: str | None) -> str:
     return " ".join(lazy_pinyin(text)) if text else ""
 
@@ -108,7 +149,7 @@ def run() -> None:
                 ref = {"guide_id": g["id"], "page_n": p["n"], "canvas_id": p["canvas_id"]}
                 prov = {"machine_extracted": True, "extraction": c["extraction"], "engine": c["engine"]}
                 for i, f in enumerate(c["fonds"]):
-                    rec = {"id": f"{p['key']}-f{i}", **f, **ref, **prov}
+                    rec = {"id": f"{p['key']}-f{i}", **f, **clean_fonds_dates(f), **ref, **prov}
                     g["fonds"].append(rec)
                     fonds_rows.append({**rec, "archive_code": g.get("archive_code")})
                 for i, t in enumerate(c["toc"]):
@@ -127,11 +168,11 @@ def run() -> None:
 
         g["title_pinyin"] = pinyin(g["title_zh"])
         g["title_zh_trad"] = s2t.convert(g["title_zh"] or "")
-        spans = [(f["date_start"], f["date_end"]) for f in g["fonds"]
-                 if isinstance(f.get("date_start"), int) and isinstance(f.get("date_end"), int)
-                 and f["date_start"] <= f["date_end"]]
+        # A single known year counts as a one-year span.
+        spans = [(f["date_start"] or f["date_end"], f["date_end"] or f["date_start"]) for f in g["fonds"]
+                 if f["date_start"] or f["date_end"]]
         years = sorted({y for span in spans for y in span})
-        g["fonds_decades"] = sorted({f"{y // 10 * 10}s" for a, b in spans for y in range(a, b + 1)})
+        g["fonds_decades"] = cover_buckets(spans)
         g["fonds_span"] = [years[0], years[-1]] if years else None
 
     # --- dataset (HF-ready JSONL; Parquet comes with the real release step) ---
