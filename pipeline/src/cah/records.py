@@ -4,7 +4,7 @@ import re
 from urllib.parse import quote
 
 from . import geo
-from .config import RAW, collection_ids, load_collections, read_json
+from .config import RAW, collection_ids, load_collections, processing_config, read_json
 
 ARK_RESOLVER = "http://arks.princeton.edu/"
 FIGGY_VIEWER = "https://figgy.princeton.edu/viewer#?manifest={manifest}&cv={index}"
@@ -82,12 +82,13 @@ def match_places(guide: dict, places: list[dict]) -> tuple[list[dict], str | Non
     return [], None
 
 
-def build() -> list[dict]:
+def build(staged: bool = False) -> list[dict]:
     collections = load_collections()
     places = geo.places()
     guides = []
     for kind, cfg in collections.items():
-        for item_id in collection_ids(kind, cfg):
+        only, cfg = processing_config(cfg, staged)
+        for item_id in only or collection_ids(kind, cfg):
             doc = read_json(RAW / "dpul" / f"{item_id}.json")
             mf = read_json(RAW / "manifests" / f"{item_id}.json")
             if doc is None or mf is None:  # not harvested (yet)
@@ -130,7 +131,7 @@ def build() -> list[dict]:
             }
 
             volumes, n = [], 0
-            manifests = mf["volumes"] or [mf["top"]]
+            manifests = (mf["volumes"] or [mf["top"]])[: cfg.get("max_volumes") or None]
             total = len(mf["top"].get("manifests", [])) or 1
             for vi, m in enumerate(manifests):
                 pages = pages_of(m, cfg.get("max_pages_per_volume", 0), n, vi)
@@ -145,6 +146,7 @@ def build() -> list[dict]:
                 })
             g["volumes"] = volumes
             g["volumes_total"] = total
+            g["volumes_restricted"] = mf.get("restricted", [])  # e.g. 403 in Figgy
             g["volumes_sampled"] = len(volumes) < total or any(
                 len(v["pages"]) < v["canvas_count"] for v in volumes
             )

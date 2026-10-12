@@ -48,6 +48,14 @@ def collection_ids(kind: str, cfg: dict) -> list[str]:
     return cfg["ids"]
 
 
+def processing_config(cfg: dict, staged: bool = False) -> tuple[list[str] | None, dict]:
+    """IDs and limits for steps after harvest. A collection at stage "harvest" only passes its
+    sample on, unless `staged` asks for everything (e.g. for prompt tests)."""
+    if cfg.get("stage") == "harvest" and not staged:
+        return cfg["sample"]["ids"], cfg["sample"]
+    return None, cfg
+
+
 def read_json(path: Path, default=None):
     if not path.exists():
         return default

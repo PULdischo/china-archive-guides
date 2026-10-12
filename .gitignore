@@ -22,3 +22,6 @@ data/export/site/guides.json
 # Search records are large (34 MB); rebuilt by `cah search`. The eval set stays tracked.
 data/export/search/records.jsonl
 data/export/search/eval-*.json
+
+# Prompt-test outputs (regenerable with `cah wenshi-test`)
+data/export/wenshi-test/

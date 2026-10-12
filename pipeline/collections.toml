@@ -2,6 +2,8 @@
 # - browse: a DPUL browse category; every item in it is harvested (re-listed each run,
 #   so new items are picked up and removed ones are reported).
 # - ids: an explicit list of DPUL access identifiers (https://dpul.princeton.edu/ealtoc/catalog/{id}).
+# - stage = "harvest": harvest everything, but only `sample` goes on to images/OCR/export
+#   (used while a collection's processing is being designed and approved).
 # Limits: 0 = no limit.
 
 [handbook]
@@ -9,7 +11,13 @@ browse = "chinese-archival-handbooks"   # 343 items as of 2026-10-11
 max_pages_per_volume = 0
 
 [wenshi]
-# Full harvest deferred (~45,800 pages); keep the smoke-test sample for now.
+browse = "wenshi-ziliao-literary-and-historical-materials"   # 29 items, 1,248 volumes, 45,249 pages
+max_volumes = 0
+max_pages_per_volume = 0
+# Full OCR run pending: prompt test, run mode, and a rights check for publishing transcriptions.
+stage = "harvest"
+
+[wenshi.sample]
 ids = [
     "dc3r075544d", # 中国文史资料总目录电子版. 四川卷
     "dcmg74qz71f", # 中国文史资料总目录电子版. 贵州卷

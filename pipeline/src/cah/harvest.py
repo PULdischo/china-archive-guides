@@ -9,6 +9,8 @@ hash, not the timestamp, decides.
 import hashlib
 import json
 
+import httpx
+
 from . import http
 from .config import RAW, STATE, collection_ids, load_collections, read_json, write_json
 
@@ -42,11 +44,19 @@ def harvest_item(c, item_id: str, cfg: dict, etags: dict) -> tuple[dict, dict]:
     cache = {m["@id"]: m for m in [prev.get("top"), *prev.get("volumes", [])] if m}
 
     top = fetch_manifest(c, doc["content_metadata_iiif_manifest_field_ssi"], etags, cache)
-    volumes = []
+    volumes, restricted = [], []
     # Wenshi ziliao items are IIIF collections with one manifest per locality.
     for ref in top.get("manifests", [])[: cfg.get("max_volumes") or None]:
-        volumes.append(fetch_manifest(c, ref["@id"], etags, cache))
-    return doc, {"top": top, "volumes": volumes}
+        try:
+            volumes.append(fetch_manifest(c, ref["@id"], etags, cache))
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code not in (401, 403):
+                raise
+            # Restricted in Figgy: record it and carry on with the other volumes.
+            label = ref.get("label")
+            restricted.append({"@id": ref["@id"], "label": label[0] if isinstance(label, list) else label,
+                               "status": e.response.status_code})
+    return doc, {"top": top, "volumes": volumes, "restricted": restricted}
 
 
 def list_browse(c, kind: str, slug: str) -> list[str]:
