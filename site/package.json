@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "eleventy && node scripts/build-search-index.mjs ../data/export/search/records.jsonl _site/pagefind",
+    "build": "NODE_OPTIONS=--max-old-space-size=16384 eleventy && node --max-old-space-size=16384 scripts/build-search-index.mjs ../data/export/search/records.jsonl _site/pagefind",
     "dev": "npm run build && eleventy --serve",
     "eval:search": "node scripts/eval-search.mjs http://127.0.0.1:8766/ custom pagefind"
   },

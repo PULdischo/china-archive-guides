@@ -143,6 +143,32 @@ def match_volumes(guides: list[dict], places: list[dict]) -> dict[str, list]:
     return out
 
 
+# Per-row fields the site doesn't need (the full dataset keeps them). The viewer link is looked up
+# from the page instead of repeated on every one of ~1M wenshi article rows.
+SITE_ROW_DROP = {"canvas_id", "viewer_url", "engine", "machine_extracted", "guide_id", "date_start_raw",
+                 "date_end_raw"}
+
+
+def site_guide(g: dict) -> dict:
+    """Slim copy for the site: one transcription per page (HTML, else plain rows), lean rows."""
+    def page(p):
+        return {k: v for k, v in p.items() if k != "text_variants" and not (k == "rows" and p.get("html"))}
+    out = {**g, "volumes": [{**v, "pages": [page(p) for p in v["pages"]]} for v in g["volumes"]]}
+    for key in ("fonds", "toc", "articles"):
+        out[key] = [{k: v for k, v in r.items() if k not in SITE_ROW_DROP} for r in g[key]]
+    return out
+
+
+def write_site_guides(guides: list[dict]) -> None:
+    """JSON Lines, one guide per line: the whole set (~1 GB as one JSON) exceeds Node's string limit."""
+    path = EXPORT / "site" / "guides.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        for g in guides:
+            f.write(json.dumps(site_guide(g), ensure_ascii=False, separators=(",", ":")) + "\n")
+    (EXPORT / "site" / "guides.json").unlink(missing_ok=True)  # superseded
+
+
 def run() -> None:
     guides = records.build()
     places = geo.places()
@@ -208,7 +234,7 @@ def run() -> None:
 
     # --- site ---
     volume_places = match_volumes(guides, places)  # before writing: sets v["place"]
-    write_json(EXPORT / "site" / "guides.json", guides)
+    write_site_guides(guides)
     # Web map. Provinces: geoBoundaries shapes for provinces with guides (no national outline),
     # popup = count + link to the province's guide list. Prefectures/counties: legacy ArcGIS
     # shapes, popup = every guide matched to the place (+ legacy catalog-only links).

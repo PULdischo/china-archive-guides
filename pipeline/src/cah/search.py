@@ -24,8 +24,8 @@ import re
 from opencc import OpenCC
 from pypinyin import lazy_pinyin
 
-from . import records
-from .config import EXPORT, read_json, write_json
+from . import markup, records
+from .config import EXPORT, write_json
 
 OUT = EXPORT / "search"
 HAN = r"㐀-䶿一-鿿豈-﫿"
@@ -75,6 +75,16 @@ def index_text(text: str) -> str:
     return " ".join(encode(t) for t in tokens(text))
 
 
+def page_text(p: dict) -> str:
+    """A page's plain text: its rows, or (site data keeps only the HTML) lines from the HTML."""
+    return "\n".join(p.get("rows") or markup.to_lines(p.get("html") or ""))
+
+
+def load_site_guides() -> list[dict]:
+    with (EXPORT / "site" / "guides.jsonl").open(encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
 def _filters(g: dict) -> dict:
     f = {"Type": [{"handbook": "Archival handbook 档案馆指南", "wenshi": "Wenshi ziliao index 文史资料"}[g["kind"]]]}
     if g.get("province"):
@@ -107,7 +117,7 @@ def build_records(guides: list[dict]) -> list[dict]:
                          "content": index_text(unit_text), "meta": {**meta, "kind": "guide", "text": unit_text}})
             for v in vols:
                 for p in v["pages"]:
-                    text = "\n".join(p.get("rows") or [])
+                    text = page_text(p)
                     if not text.strip():
                         continue
                     recs.append({**base, "filters": {**base["filters"], "record": ["page"]},
@@ -136,8 +146,12 @@ def build_eval(guides: list[dict], seed: int = 7) -> list[dict]:
     for g in guides:
         units = [(g["id"], g["volumes"])] if g["kind"] != "wenshi" else [(v["id"], [v]) for v in g["volumes"]]
         for unit_id, vols in units:
-            corpus[unit_id] = normalize("".join("".join(p.get("rows") or []) for v in vols for p in v["pages"]))
-    titles = {g["id"]: " ".join(filter(None, [g["title_zh"], g.get("title_romanized")])).lower() for g in guides}
+            corpus[unit_id] = normalize("".join(page_text(p).replace("\n", "") for v in vols for p in v["pages"]))
+    titles = {}
+    for g in guides:  # same units as ranking: wenshi volumes carry their item's title
+        t = " ".join(filter(None, [g["title_zh"], g.get("title_romanized")])).lower()
+        for unit_id in ([g["id"]] if g["kind"] != "wenshi" else [v["id"] for v in g["volumes"]]):
+            titles[unit_id] = t
 
     def truth(q):
         nq = normalize(q)
@@ -161,7 +175,7 @@ def build_eval(guides: list[dict], seed: int = 7) -> list[dict]:
 
 
 def run() -> None:
-    guides = read_json(EXPORT / "site" / "guides.json")
+    guides = load_site_guides()
     OUT.mkdir(parents=True, exist_ok=True)
     recs = build_records(guides)
     with (OUT / "records.jsonl").open("w", encoding="utf-8") as f:

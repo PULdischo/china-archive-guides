@@ -60,7 +60,7 @@ eleventyComputed:
   <table class="data">
     <thead><tr><th>No.</th><th>Fonds</th><th>Counts</th><th>Dates</th><th>Scan</th><th>DPUL</th></tr></thead>
     <tbody>{% for f in g.fonds %}
-      <tr><td>{{ f.fonds_no }}</td><td lang="zh">{{ f.name }}</td><td>{{ f.counts | join(" / ") }}</td><td>{{ f.date_start }}–{{ f.date_end }}</td><td><a href="#p{{ f.page_n }}">p{{ f.page_n }}</a></td><td><a href="{{ f.viewer_url }}">View</a></td></tr>
+      <tr><td>{{ f.fonds_no }}</td><td lang="zh">{{ f.name }}</td><td>{{ f.counts | join(" / ") }}</td><td>{{ f.date_start }}–{{ f.date_end }}</td><td><a href="#p{{ f.page_n }}">p{{ f.page_n }}</a></td><td><a href="{{ g | viewerFor(f.page_n) }}">View</a></td></tr>
     {% endfor %}</tbody>
   </table>
 </details>
@@ -72,7 +72,7 @@ eleventyComputed:
   <table class="data">
     <thead><tr><th>Section</th><th>Entry</th><th>Book p.</th><th>Scan</th><th>DPUL</th></tr></thead>
     <tbody>{% for t in g.toc %}
-      <tr><td lang="zh">{{ t.section }}</td><td lang="zh">{{ t.heading }}</td><td>{{ t.page }}</td><td><a href="#p{{ t.page_n }}">p{{ t.page_n }}</a></td><td><a href="{{ t.viewer_url }}">View</a></td></tr>
+      <tr><td lang="zh">{{ t.section }}</td><td lang="zh">{{ t.heading }}</td><td>{{ t.page }}</td><td><a href="#p{{ t.page_n }}">p{{ t.page_n }}</a></td><td><a href="{{ g | viewerFor(t.page_n) }}">View</a></td></tr>
     {% endfor %}</tbody>
   </table>
 </details>

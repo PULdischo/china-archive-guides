@@ -36,6 +36,12 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter("pageCount", (g) => g.volumes.reduce((n, v) => n + v.pages.length, 0));
   // Nunjucks' selectattr only tests truthiness (no "equalto"), so filter by value here.
   eleventyConfig.addFilter("whereEq", (items, key, value) => items.filter((x) => x[key] === value));
+  // Viewer link for a guide's scan number (rows don't carry it, to keep site data small).
+  const viewers = new WeakMap();
+  eleventyConfig.addFilter("viewerFor", (g, n) => {
+    if (!viewers.has(g)) viewers.set(g, new Map(g.volumes.flatMap((v) => v.pages.map((p) => [p.n, p.viewer_url]))));
+    return viewers.get(g).get(n);
+  });
   eleventyConfig.addFilter("countOf", (guides, key) => guides.reduce((n, g) => n + g[key].length, 0));
 
   return {
