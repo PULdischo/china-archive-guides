@@ -9,6 +9,8 @@ dependencies = [
     "opencc-python-reimplemented>=0.1.7",
     "pypinyin>=0.53",
     "nh3>=0.2",
+    "pyarrow>=17",
+    "huggingface_hub>=0.25",
 ]
 
 [project.scripts]

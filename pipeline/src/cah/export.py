@@ -207,7 +207,8 @@ def run() -> None:
                            **ref, **prov}
                     g["articles"].append(rec)
                     article_rows.append(rec)
-                page_rows.append({**ref, "key": p["key"], "volume": v["label"], "label": p["label"],
+                page_rows.append({**ref, "key": p["key"], "volume": v["label"], "volume_id": v["id"],
+                                  "label": p["label"],
                                   "image_service": p["image_service"], "text": text, "html": p["html"],
                                   "page_type": p["page_type"],
                                   "ocr_engine": p["ocr_engine"], "ocr_mean_score": p["ocr_mean_score"],

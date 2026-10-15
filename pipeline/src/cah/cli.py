@@ -2,16 +2,18 @@
 
 import argparse
 
-from . import compare, export, geo, harvest, images, ocr, search, wenshi
+from . import compare, export, geo, harvest, images, ocr, release, search, wenshi
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="cah", description=__doc__)
-    ap.add_argument("step", choices=["harvest", "geo", "images", "ocr", "export", "search", "compare", "wenshi-test", "all"])
+    ap.add_argument("step", choices=["harvest", "geo", "images", "ocr", "export", "search", "compare", "wenshi-test", "release", "publish", "all"])
     ap.add_argument("--engine", choices=list(ocr.ENGINES),
                     help="OCR engine for the ocr step (default: CAH_OCR_ENGINE or rapidocr)")
     ap.add_argument("--fallback-only", action="store_true",
                     help="ocr: only pages DashScope blocked, failed or hasn't done (use with --engine rapidocr)")
+    ap.add_argument("--repo", default=release.DEFAULT_REPO, help="release/publish: Hugging Face dataset repo")
+    ap.add_argument("--private", action="store_true", help="publish: create the dataset repo as private")
     args = ap.parse_args()
 
     steps = {
@@ -24,6 +26,12 @@ def main() -> None:
     }
     if args.step == "compare":
         compare.run()
+        return
+    if args.step == "release":
+        release.run(args.repo)
+        return
+    if args.step == "publish":
+        release.publish(args.repo, args.private)
         return
     if args.step == "wenshi-test":
         wenshi.run_test()

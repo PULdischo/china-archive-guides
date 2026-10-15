@@ -26,3 +26,6 @@ data/export/search/eval-*.json
 # Prompt-test outputs (regenerable with `cah wenshi-test`)
 data/export/wenshi-test/
 data/export/site/guides.jsonl
+
+# Built dataset release (published to Hugging Face; rebuilt by `cah release`)
+data/release/
