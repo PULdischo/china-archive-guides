@@ -59,25 +59,46 @@ export async function search(pagefind, normalize, query,
   const latin = (p) => /^[a-z0-9]+$/.test(p);
   const wordRe = (p) => new RegExp(`(^|[^a-z0-9])${p}($|[^a-z0-9])`);
   const contains = (text, p) => (latin(p) ? wordRe(p).test(text) : text.includes(p));
+  // A query of romanized words only ("Shanghai Shi") is a phrase; Chinese terms separated by
+  // spaces must each occur, in any order.
+  const required = phrases.every(latin) ? [phrases.join(" ")] : phrases;
+  const contains2 = (text, p) => (p.includes(" ") ? new RegExp(`(^|[^a-z0-9])${p.split(" ").join("\\s+")}($|[^a-z0-9])`).test(text) : contains(text, p));
   const verify = (d) => {
     if (exactByIndex) return true;
     const text = normalize(d.meta.text);
-    return phrases.every((p) => contains(text, p));
+    return required.every((p) => contains2(text, p));
   };
 
+  // One search restricted to the next batch of top units (any of them), instead of one search per unit:
+  // each Pagefind search recomputes counts for ~1,600 filter values, so 10 searches cost ~1 s.
   const guides = [];
   let next = offset;
-  // Fetch in parallel batches of `want`; a guide whose pages all fail verification is skipped.
   while (guides.length < want && next < counts.length) {
     const batch = counts.slice(next, next + (want - guides.length));
     next += batch.length;
-    const found = await Promise.all(batch.map(async ([id, n]) => {
-      const gr = await pagefind.search(q, { filters: { ...filters, guide: id } });
-      const data = await Promise.all(gr.results.slice(0, pagesPerGuide * 2).map((x) => x.data()));
-      const pages = data.filter(verify).slice(0, pagesPerGuide);
-      return pages.length ? { guide: id, href: pages[0].meta.href, title: pages[0].meta.title, year: pages[0].meta.year, matches: n, pages } : null;
+    const ids = batch.map(([id]) => id);
+    const gr = await pagefind.search(q, { filters: { ...filters, guide: { any: ids } } });
+    const pages = new Map(ids.map((id) => [id, []]));
+    // Fragments in score order, in batches, until every unit has its pages or results run out.
+    const cap = Math.min(gr.results.length, ids.length * pagesPerGuide * 4);
+    for (let i = 0; i < cap && [...pages.values()].some((ps) => ps.length < pagesPerGuide); i += 24) {
+      const data = await Promise.all(gr.results.slice(i, Math.min(i + 24, cap)).map((x) => x.data()));
+      for (const d of data) {
+        const ps = pages.get(d.meta.guide);
+        if (ps && ps.length < pagesPerGuide && verify(d)) ps.push(d);
+      }
+    }
+    // A unit with many matching pages can crowd the others out of the loaded window; give any
+    // unit still without pages its own (rare, cheap) search.
+    await Promise.all(ids.filter((id) => !pages.get(id).length).map(async (id) => {
+      const own = await pagefind.search(q, { filters: { ...filters, guide: id } });
+      const data = await Promise.all(own.results.slice(0, pagesPerGuide * 2).map((x) => x.data()));
+      pages.set(id, data.filter(verify).slice(0, pagesPerGuide));
     }));
-    guides.push(...found.filter(Boolean));
+    for (const [id, n] of batch) {
+      const ps = pages.get(id);
+      if (ps.length) guides.push({ guide: id, href: ps[0].meta.href, title: ps[0].meta.title, year: ps[0].meta.year, matches: n, pages: ps });
+    }
   }
   return { guides, totalGuides: counts.length, totalPages: r.results.length, next };
 }
