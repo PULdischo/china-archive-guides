@@ -6,6 +6,8 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
   eleventyConfig.addPassthroughCopy({ "../data/export/site/places.geojson": "data/places.geojson" });
+  // Custom static search index (pipeline: `cah csindex`).
+  eleventyConfig.addPassthroughCopy({ "../data/export/csi": "csi" });
   // Self-hosted MapLibre (no third-party CDN; see PLAN.md §5 on access from China).
   eleventyConfig.addPassthroughCopy({
     "node_modules/maplibre-gl/dist/maplibre-gl.js": "assets/vendor/maplibre-gl.js",

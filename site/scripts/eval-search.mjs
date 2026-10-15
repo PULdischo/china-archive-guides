@@ -9,18 +9,26 @@ import { makeNormalize, search } from "../src/assets/search-core.js";
 const [base = "http://127.0.0.1:8766/", mode = "default", bundle = "pagefind"] = process.argv.slice(2);
 const evalSet = JSON.parse(readFileSync("../data/export/search/eval.json", "utf-8"));
 
-const src = await (await fetch(new URL(`${bundle}/pagefind.js`, base))).text();
-const file = join(mkdtempSync(join(tmpdir(), "pf-")), "pagefind.mjs");
-writeFileSync(file, src);
-const pf = await import(file);
-await pf.options({ basePath: new URL(`${bundle}/`, base).href });
-await pf.init();
+// mode "csi": the custom static index (bundle = its folder, e.g. "csi"); else Pagefind.
+let pf, csi, ix;
+if (mode === "csi") {
+  csi = await import("../src/assets/csi-core.js");
+  ix = await csi.openIndex(new URL(`${bundle}/`, base));
+} else {
+  const src = await (await fetch(new URL(`${bundle}/pagefind.js`, base))).text();
+  const file = join(mkdtempSync(join(tmpdir(), "pf-")), "pagefind.mjs");
+  writeFileSync(file, src);
+  pf = await import(file);
+  await pf.options({ basePath: new URL(`${bundle}/`, base).href });
+  await pf.init();
+}
 
 const guideOf = (url) => url.match(/guides\/([^/#]+)/)?.[1];
 let normalize;
 if (mode === "custom") normalize = makeNormalize(await (await fetch(new URL(`${bundle}/t2s.json`, base))).json());
 
 async function top10(q) {
+  if (mode === "csi") return (await csi.search(ix, q)).guides.slice(0, 10).map((g) => g.guide);
   if (mode === "custom") return (await search(pf, normalize, q)).guides.slice(0, 10).map((g) => g.guide);
   const r = await pf.search(q);
   const ids = [];

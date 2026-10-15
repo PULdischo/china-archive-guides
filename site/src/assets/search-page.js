@@ -1,5 +1,7 @@
-// Search page: custom CJK tokens over the Pagefind index (see search-core.js).
-import { browse, makeNormalize, search } from "./search-core.js";
+// Search page. Default engine: the custom static index (csi-core.js); ?engine=pagefind uses the
+// Pagefind index (search-core.js) for comparison.
+import * as pfCore from "./search-core.js";
+import * as csi from "./csi-core.js";
 
 const root = document.getElementById("search-app");
 const base = root.dataset.base.replace(/\/?$/, "/");
@@ -17,22 +19,38 @@ const NEW_TAB_LABEL = '<span class="ext" aria-hidden="true">↗</span>' +
   '<span class="visually-hidden"> (opens in a new tab, <span lang="zh">在新标签页打开</span>)</span>';
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
-const pagefind = await import(`${base}pagefind/pagefind.js`);
-await pagefind.options({ baseUrl: base });
-await pagefind.init();
-const t2s = await (await fetch(`${base}pagefind/t2s.json`)).json();
-const normalize = makeNormalize(t2s);
+const engine = new URLSearchParams(location.search).get("engine") === "pagefind" ? "pagefind" : "csi";
+let t2s, normalize, facetValues, search, browse;
+if (engine === "csi") {
+  const ix = await csi.openIndex(new URL(`${base}csi/`, location.href));
+  normalize = ix.normalize;
+  t2s = await (await fetch(`${base}csi/t2s.json`)).json();
+  // Facet values with true counts of guides/volumes (not pages).
+  facetValues = {};
+  for (const u of ix.units) for (const [k, vs] of Object.entries(u.filters))
+    for (const v of vs) (facetValues[k] ??= {})[v] = (facetValues[k][v] || 0) + 1;
+  search = (q, opts) => csi.search(ix, q, opts);
+  browse = (filters, opts) => csi.browse(ix, filters, opts);
+} else {
+  const pagefind = await import(`${base}pagefind/pagefind.js`);
+  await pagefind.options({ baseUrl: base });
+  await pagefind.init();
+  t2s = await (await fetch(`${base}pagefind/t2s.json`)).json();
+  normalize = pfCore.makeNormalize(t2s);
+  facetValues = await pagefind.filters();
+  search = (q, opts) => pfCore.search(pagefind, normalize, q, opts);
+  browse = (filters, opts) => pfCore.browse(pagefind, filters, opts);
+}
 const fold = (c) => (t2s[c] ?? c).toLowerCase();
 
-// Facet selects. No counts: Pagefind counts indexed pages, which would read as guide counts.
-const all = await pagefind.filters();
+// Facet selects (counts shown only for the custom index, where they count guides/volumes).
 for (const name of FACETS) {
-  const values = Object.entries(all[name] || {})
+  const values = Object.entries(facetValues[name] || {})
     .sort((a, b) => (b[0].startsWith("Before") - a[0].startsWith("Before")) || a[0].localeCompare(b[0], "zh"));
   if (!values.length) continue;
   filterBox.insertAdjacentHTML("beforeend",
     `<label>${esc(name)} <select name="${esc(name)}"><option value="">All</option>${values
-      .map(([v]) => `<option value="${esc(v)}">${esc(v)}</option>`).join("")}</select></label>`);
+      .map(([v, n]) => `<option value="${esc(v)}">${esc(v)}${engine === "csi" ? ` (${n})` : ""}</option>`).join("")}</select></label>`);
 }
 
 // Excerpt around the first match of the query in the original text, highlighted.
@@ -85,8 +103,8 @@ async function run(append = false) {
   status.textContent = "Searching…";
   const offset = append ? state.offset : 0;
   const res = state.q.trim()
-    ? await search(pagefind, normalize, state.q, { filters: state.filters, offset })
-    : await browse(pagefind, state.filters, { offset }); // e.g. /search/?Province=江苏 from the home-page map
+    ? await search(state.q, { filters: state.filters, offset })
+    : await browse(state.filters, { offset }); // e.g. /search/?Province=江苏 from the home-page map
   render(res, append);
 }
 
@@ -94,7 +112,7 @@ function readForm() {
   const filters = {};
   for (const sel of filterBox.querySelectorAll("select")) if (sel.value) filters[sel.name] = sel.value;
   state = { q: input.value.trim(), filters, offset: 0 };
-  const params = new URLSearchParams({ q: state.q, ...filters });
+  const params = new URLSearchParams({ q: state.q, ...filters, ...(engine === "pagefind" ? { engine } : {}) });
   history.replaceState(null, "", `?${params}`);
 }
 
