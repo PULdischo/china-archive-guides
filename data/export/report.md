@@ -1,10 +1,10 @@
 # Pipeline run report
 
 - Guides: 372 ({'handbook': 343, 'wenshi': 29})
-- Pages: 51409; engines: {'dashscope qwen3-vl-plus prompt-v2': 6099, 'rapidocr-onnxruntime 1.4.4': 1300, 'dashscope qwen3-vl-plus wenshi-v3': 44010}
+- Pages: 51409; engines: {'dashscope qwen3-vl-plus prompt-v2': 6106, 'rapidocr-onnxruntime 1.4.4': 1292, 'dashscope qwen3-vl-plus wenshi-v3': 44011}
 - RapidOCR mean line confidence: 0.949
 - Pages blocked by DashScope moderation (RapidOCR fallback used): 1292
-- Extracted fonds rows: 55249; contents entries: 60147; wenshi article rows: 1025686
+- Extracted fonds rows: 55356; contents entries: 60147; wenshi article rows: 1025817
 - Legacy map: 253 places, 311 linked catalog records
 
 | Guide | Kind | Year (raw) | Place match | Places | Pages | Fonds | Contents | Articles |
@@ -200,7 +200,7 @@
 | gh93h8058 柳州市档案馆指南 | handbook | 2009 (2009) | catalog_id | 柳州市 | 20 | 261 | 171 | 0 |
 | 6969z931k 永康市档案馆指南 | handbook | 2014 (2014) | catalog_id | 永康市 | 17 | 199 | 212 | 0 |
 | jq085v51w 菏泽地区档案馆指南 | handbook | 1987 (1987) | catalog_id | 菏泽市 | 17 | 89 | 101 | 0 |
-| 5d86p8732 莱芜市档案馆指南 | handbook | 2000 (2000) | catalog_id | 莱芜市 | 17 | 0 | 158 | 0 |
+| 5d86p8732 莱芜市档案馆指南 | handbook | 2000 (2000) | catalog_id | 莱芜市 | 17 | 106 | 158 | 0 |
 | js956r33d 贵阳市白云区档案馆指南 | handbook | 2004 (2004) | catalog_id | 白云区 | 11 | 65 | 107 | 0 |
 | gx41mt37d 西安市档案馆指南 | handbook | 1997 (1997) | catalog_id | 西安市 | 18 | 107 | 258 | 0 |
 | sq87c416x 彭州市档案馆指南 | handbook | 2006 (2006) | catalog_id | 彭州市 | 18 | 149 | 182 | 0 |
@@ -316,7 +316,7 @@
 | vh53x525w 广西壮族自治区档案馆指南 | handbook | 2010 (2010) | catalog_id | 广西壮族自治区 | 30 | 316 | 253 | 0 |
 | wm117z51c 杭州市档案馆指南 | handbook | 2009 (2009) | catalog_id | 杭州市 | 33 | 493 | 228 | 0 |
 | fx719x006 萧山市档案馆指南 | handbook | 2000 (2000) | catalog_id | 萧山区 | 33 | 440 | 195 | 0 |
-| 3t9461302 大理市档案馆指南 | handbook | 1997 (1997) | catalog_id | 大理市 | 37 | 336 | 200 | 0 |
+| 3t9461302 大理市档案馆指南 | handbook | 1997 (1997) | catalog_id | 大理市 | 37 | 337 | 200 | 0 |
 | 1257b279c 义乌市档案馆指南 | handbook | 1997 (1997) | catalog_id | 义乌市 | 33 | 455 | 212 | 0 |
 | m613n713v 浙江省档案馆指南 | handbook | 2013 (2013) | catalog_id | 浙江 | 27 | 287 | 339 | 0 |
 | cc08hr163 阿坝藏族羌族自治州档案馆指南 | handbook | 2002 (2002-999, malformed) | catalog_id | 阿坝藏族羌族自治州 | 11 | 27 | 124 | 0 |
@@ -360,7 +360,7 @@
 | dc9880w358k 中国文史资料总目录电子版. 安徽卷 | wenshi | 2012 (2012-1199, malformed) | place_name | 安徽 | 1990 | 0 | 0 | 45518 |
 | dcn009wd870 中国文史资料总目录电子版. 陕西卷 | wenshi | 2011 (2011-1299, malformed) | place_name | 陕西 | 1774 | 0 | 0 | 37045 |
 | dcjd473806p 中国文史资料总目录电子版. 辽宁卷 | wenshi | 2011 (2011-1299, malformed) | — | — | 1155 | 0 | 0 | 25065 |
-| dc3r075544d 中国文史资料总目录电子版. 四川卷 | wenshi | 2010 (2010-1199, malformed) | place_name | 四川 | 3981 | 0 | 0 | 75058 |
+| dc3r075544d 中国文史资料总目录电子版. 四川卷 | wenshi | 2010 (2010-1199, malformed) | place_name | 四川 | 3981 | 0 | 0 | 75189 |
 | dc02871637j 中国文史资料总目录電子版. 山西卷 | wenshi | 2009 (2009-1299, malformed) | — | — | 1541 | 0 | 0 | 44563 |
 | dcz603r791q 中国文史资料总目录電子版. 上海卷 | wenshi | 2010 (2010-1199, malformed) | place_name | 上海市 | 535 | 0 | 0 | 11222 |
 | dc6t053s525 中国文史资料总目录电子版. 云南卷 | wenshi | 2009 (2009-1299, malformed) | — | — | 1798 | 0 | 0 | 46739 |

@@ -123,8 +123,10 @@ WHERE f.name LIKE '%粮食局%';
    DashScope, `qwen3-vl-plus`). Handbooks were asked for HTML plus structured fonds and contents rows
    (prompt v2). Wenshi index pages were asked for HTML only (prompt `wenshi-v3`); their entries are parsed
    from the HTML. $n_rapidocr pages were read instead by **RapidOCR** (PaddleOCR models, run locally)
-   with rule-based extraction. These were pages the model service refused (see below) or failed on
-   repeatedly.
+   with rule-based extraction: the pages the model service refused (see below). Eight pages on which the
+   model failed repeatedly (very wide, mostly empty tables; one very dense index page) were rescued with
+   targeted requests: fonds rows only, or the page split into two halves. `pages.ocr_notes` records
+   both cases.
 3. **Normalization.** HTML was sanitized to an allow-list of tags; fonds dates were cleaned as above;
    catalog dates with MARC placeholder digits (e.g. `2004-699`) were normalized to the first year.
 4. **Places.** Each guide has a province from its administrative-division code (行政区划代码) in the

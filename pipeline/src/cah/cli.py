@@ -2,12 +2,12 @@
 
 import argparse
 
-from . import compare, export, geo, harvest, images, ocr, release, search, wenshi
+from . import compare, export, geo, harvest, images, ocr, release, rescue, search, wenshi
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="cah", description=__doc__)
-    ap.add_argument("step", choices=["harvest", "geo", "images", "ocr", "export", "search", "compare", "wenshi-test", "release", "publish", "all"])
+    ap.add_argument("step", choices=["harvest", "geo", "images", "ocr", "export", "search", "compare", "wenshi-test", "release", "publish", "rescue", "all"])
     ap.add_argument("--engine", choices=list(ocr.ENGINES),
                     help="OCR engine for the ocr step (default: CAH_OCR_ENGINE or rapidocr)")
     ap.add_argument("--fallback-only", action="store_true",
@@ -26,6 +26,9 @@ def main() -> None:
     }
     if args.step == "compare":
         compare.run()
+        return
+    if args.step == "rescue":
+        rescue.run()
         return
     if args.step == "release":
         release.run(args.repo)

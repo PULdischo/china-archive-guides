@@ -99,6 +99,8 @@ def page_content(g: dict, p: dict, ctx: dict, engines: list[str] | None = None) 
         else:
             articles = []
         fonds = [{**f, "counts": f.get("counts") or []} for f in o.get("fonds", [])]
+        if o.get("rescue"):
+            notes.append(f"{engine}: rescued ({o['rescue']})")
         # Prompt v2+ returns an HTML transcription; v1 returned plain lines.
         html = markup.sanitize(o["html"]) if o.get("html") else None
         rows = markup.to_lines(html) if html else o.get("lines", [])
