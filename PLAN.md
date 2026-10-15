@@ -148,6 +148,59 @@ Known gaps and mitigations:
   Mean latency was ~200 ms per query on a local server (topics ~370 ms). Index: 37 MB (the whole site is 47 MB, down from 59 MB). Precision is high partly by construction (the check is exact-string). The test set does not yet judge *ranking* among many relevant guides (e.g. 268 guides contain 粮食局). Add real researcher queries with graded relevance.
 - **SQLite fallback not needed.** Still open: whether ranking by matching-page count suits researchers, phrase ranking for multi-word romanized queries, and the cost of Pagefind's own excerpts (unused; we render excerpts from `meta.text`).
 
+#### Search performance at full scale (measured 2026-10-15; 53,000 records)
+
+**Why broad queries are slow:** Pagefind's cost grows with the number of matching *records*, not with bytes
+downloaded. It scores and builds a result for every match, at ~0.3 ms each. Timings are warm, local
+server:
+
+| Query | Matching pages | Main search | Notes |
+|---|---|---|---|
+| 学校 | 6,152 | ~2.0 s | + ~1.0 s for the top-10 restricted search |
+| 中共 | 4,754 | ~1.55 s | + ~0.8 s |
+| 土地改革 | 786 | ~0.3–0.6 s | |
+| 交通部公路总局 | 63 | ~30–60 ms | |
+
+Downloads are only 30–200 KB per query. Experimental indexes built from the same records:
+
+| Variant | Size | 学校 | 中共 | Finding |
+|---|---|---|---|---|
+| Current (all, per-guide filter) | 352 MB | 2.0 s | 1.55 s | baseline |
+| No per-guide filter | 351 MB | 1.7 s | 1.3 s | filter bookkeeping is only ~15% |
+| Bigrams only (no unigrams) | 304 MB | 2.1 s | 1.5 s | no gain |
+| Handbooks only (6.5k records) | 37 MB | 0.10 s | 0.19 s | archives alone are fast |
+| Wenshi only (46.5k records) | 317 MB | 1.4 s | 0.8 s | still slow: 88% of matches are wenshi pages |
+| Fonds rows only (55k short records) | 13 MB | <0.01 s | 0.01 s | instant, but fonds names alone miss contents-only listings |
+
+Filtering a shared index does not substitute for separate indexes. A filtered search still scores every
+match first: 学校 restricted to handbooks takes 1.06 s, vs 0.10 s in a handbooks-only index.
+
+**Custom index estimate:** 10.5M (bigram, page) postings, ~23 MB as delta-varints (vs Pagefind's 352 MB).
+The postings for 学校 are ~14 KB, and intersecting them in the browser takes milliseconds regardless of how
+common the term is.
+
+**Options**
+
+1. **Split the Pagefind index into archives and local histories, and search both in parallel.** Results
+   render progressively: archives in <0.2 s; local histories still 1–3 s for very common terms. Low effort.
+2. **Skip the second search** with a precomputed fragment → unit map, ranking from the main results.
+   Saves ~1 s on common terms; relies on Pagefind internals. Low effort.
+3. **Custom static inverted index (replace Pagefind).** Postings sharded by bigram (~6 KB shards),
+   unit metadata (1,591 units) loaded once, page texts in shards for verification and excerpts.
+   - Expected under ~0.3 s for any query, including the most common terms.
+   - Facet counts become true guide/volume counts (Pagefind's are page counts).
+   - Site shrinks by ~300 MB.
+   - We already own tokenization, exact-string verification and ranking; Pagefind only stores postings
+     and fragments. Medium effort, more code to own.
+4. **Entry-level archive results:** fonds rows and contents entries (~115k) as first-class results,
+   showing "fonds X, dates, in archive Y". This is the most direct answer to a researcher's question.
+   Complements 1 or 3.
+
+**Recommended:** prototype option 3 and benchmark it with the existing harness (`eval-search.mjs`,
+Node + browser) before switching. Present results in two sections, **Archives** and **Local histories**
+(the separation, done in the interface rather than the index), with option 4's fonds and contents
+entries in the Archives section. Keep Pagefind until the prototype beats it on the eval set.
+
 **Bake-off (Phase 2 exit):**
 - **Queries:** 40–60 real queries collected from grad students, faculty, and reference staff, in Chinese simplified/traditional, pinyin, and English.
 - **Measures:** recall@10 against judged results; index size and file count; first-query latency on a throttled connection; and results from mainland China.
