@@ -154,7 +154,7 @@ SITE_ROW_DROP = {"canvas_id", "viewer_url", "engine", "machine_extracted", "guid
 def site_guide(g: dict) -> dict:
     """Slim copy for the site: one transcription per page (HTML, else plain rows), lean rows."""
     def page(p):
-        return {k: v for k, v in p.items() if k != "text_variants" and not (k == "rows" and p.get("html"))}
+        return {k: v for k, v in p.items() if not (k == "rows" and p.get("html"))}
     out = {**g, "volumes": [{**v, "pages": [page(p) for p in v["pages"]]} for v in g["volumes"]]}
     for key in ("fonds", "toc", "articles"):
         out[key] = [{k: v for k, v in r.items() if k not in SITE_ROW_DROP} for r in g[key]]
@@ -189,9 +189,6 @@ def run() -> None:
                 if c["score"] is not None:
                     scores.append(c["score"])
                 text = "\n".join(rows)
-                # Search variants: traditional forms of the page text (Pagefind has no s/t folding).
-                trad = s2t.convert(text)
-                p["text_variants"] = trad if trad != text else ""
 
                 ref = {"guide_id": g["id"], "page_n": p["n"], "canvas_id": p["canvas_id"],
                        "viewer_url": p["viewer_url"]}

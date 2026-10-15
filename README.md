@@ -11,7 +11,7 @@ full-text, metadata and spatial search, published as a static site and an open d
 pipeline/            Python (uv) — harvest, images, OCR, extraction, export
   collections.toml   which DPUL collections/items to process
   src/cah/           harvest.py  geo.py  records.py  images.py  ocr.py  extract.py  export.py
-site/                11ty + Pagefind + MapLibre static site
+site/                11ty + MapLibre static site with a custom static search index
 data/
   raw/ images/ ocr/ state/   local caches (git-ignored)
   export/dataset/    JSONL per entity (guides, pages, fonds, wenshi_articles, places)
@@ -32,7 +32,7 @@ lacks. `uv run cah compare` writes `data/export/ocr-compare.md` (engine agreemen
 
 ```sh
 make pipeline    # or: cd pipeline && uv run cah {harvest|geo|images|ocr|export|compare|all} [--engine dashscope|rapidocr]
-make site        # 11ty build + Pagefind index -> site/_site
+make site        # 11ty build -> site/_site (search index from `cah csindex`)
 make serve       # build and serve locally at http://localhost:8080
 ```
 

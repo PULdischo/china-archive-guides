@@ -1,7 +1,5 @@
-// Search page. Default engine: the custom static index (csi-core.js); ?engine=pagefind uses the
-// Pagefind index (search-core.js) for comparison.
-import * as pfCore from "./search-core.js";
-import * as csi from "./csi-core.js";
+// Search page over the static search index (search-index.js).
+import * as engine from "./search-index.js";
 
 const root = document.getElementById("search-app");
 const base = root.dataset.base.replace(/\/?$/, "/");
@@ -19,38 +17,25 @@ const NEW_TAB_LABEL = '<span class="ext" aria-hidden="true">↗</span>' +
   '<span class="visually-hidden"> (opens in a new tab, <span lang="zh">在新标签页打开</span>)</span>';
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
-const engine = new URLSearchParams(location.search).get("engine") === "pagefind" ? "pagefind" : "csi";
-let t2s, normalize, facetValues, search, browse;
-if (engine === "csi") {
-  const ix = await csi.openIndex(new URL(`${base}csi/`, location.href));
-  normalize = ix.normalize;
-  t2s = await (await fetch(`${base}csi/t2s.json`)).json();
-  // Facet values with true counts of guides/volumes (not pages).
-  facetValues = {};
-  for (const u of ix.units) for (const [k, vs] of Object.entries(u.filters))
-    for (const v of vs) (facetValues[k] ??= {})[v] = (facetValues[k][v] || 0) + 1;
-  search = (q, opts) => csi.search(ix, q, opts);
-  browse = (filters, opts) => csi.browse(ix, filters, opts);
-} else {
-  const pagefind = await import(`${base}pagefind/pagefind.js`);
-  await pagefind.options({ baseUrl: base });
-  await pagefind.init();
-  t2s = await (await fetch(`${base}pagefind/t2s.json`)).json();
-  normalize = pfCore.makeNormalize(t2s);
-  facetValues = await pagefind.filters();
-  search = (q, opts) => pfCore.search(pagefind, normalize, q, opts);
-  browse = (filters, opts) => pfCore.browse(pagefind, filters, opts);
-}
+const ix = await engine.openIndex(new URL(`${base}csi/`, location.href));
+const normalize = ix.normalize;
+const t2s = await (await fetch(`${base}csi/t2s.json`)).json();
+// Facet values with counts of guides/volumes.
+const facetValues = {};
+for (const u of ix.units) for (const [k, vs] of Object.entries(u.filters))
+  for (const v of vs) (facetValues[k] ??= {})[v] = (facetValues[k][v] || 0) + 1;
+const search = (q, opts) => engine.search(ix, q, opts);
+const browse = (filters, opts) => engine.browse(ix, filters, opts);
 const fold = (c) => (t2s[c] ?? c).toLowerCase();
 
-// Facet selects (counts shown only for the custom index, where they count guides/volumes).
+// Facet selects with guide/volume counts.
 for (const name of FACETS) {
   const values = Object.entries(facetValues[name] || {})
     .sort((a, b) => (b[0].startsWith("Before") - a[0].startsWith("Before")) || a[0].localeCompare(b[0], "zh"));
   if (!values.length) continue;
   filterBox.insertAdjacentHTML("beforeend",
     `<label>${esc(name)} <select name="${esc(name)}"><option value="">All</option>${values
-      .map(([v, n]) => `<option value="${esc(v)}">${esc(v)}${engine === "csi" ? ` (${n})` : ""}</option>`).join("")}</select></label>`);
+      .map(([v, n]) => `<option value="${esc(v)}">${esc(v)} (${n})</option>`).join("")}</select></label>`);
 }
 
 // Excerpt around the first match of the query in the original text, highlighted.
@@ -81,7 +66,7 @@ function render(res, append) {
       <h3><a href="${href}" lang="zh">${esc(g.title)}</a>${g.year ? ` <span class="year">${esc(g.year)}</span>` : ""}</h3>
       ${g.matches == null ? "" : `<p class="count">${g.matches} matching ${g.matches === 1 ? "record" : "records"}</p>`}
       <ul class="pages">${(pages.length ? pages : g.pages).map((p) => `<li>
-        <a href="${esc(p.url)}">${esc(p.meta.page || "Guide record")}</a>${p.meta.viewer
+        <a href="${esc(base + p.url.replace(/^\//, ""))}">${esc(p.meta.page || "Guide record")}</a>${p.meta.viewer
           ? `<a class="dpul" href="${esc(p.meta.viewer)}"${NEW_TAB}>DPUL${NEW_TAB_LABEL}</a>` : ""}
         <span class="excerpt" lang="zh">${excerpt(p.meta.text.replace(/\s+/g, " "), state.q)}</span></li>`).join("")}</ul>
     </li>`);
@@ -112,7 +97,7 @@ function readForm() {
   const filters = {};
   for (const sel of filterBox.querySelectorAll("select")) if (sel.value) filters[sel.name] = sel.value;
   state = { q: input.value.trim(), filters, offset: 0 };
-  const params = new URLSearchParams({ q: state.q, ...filters, ...(engine === "pagefind" ? { engine } : {}) });
+  const params = new URLSearchParams({ q: state.q, ...filters });
   history.replaceState(null, "", `?${params}`);
 }
 

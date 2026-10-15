@@ -23,12 +23,10 @@ def main() -> None:
         "ocr": lambda: ocr.run(args.engine, args.fallback_only),
         "export": export.run,
         "search": search.run,
+        "csindex": csindex.run,
     }
     if args.step == "compare":
         compare.run()
-        return
-    if args.step == "csindex":
-        csindex.run()
         return
     if args.step == "rescue":
         rescue.run()

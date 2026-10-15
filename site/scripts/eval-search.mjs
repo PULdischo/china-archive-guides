@@ -1,44 +1,13 @@
-// Score search engines against data/export/search/eval.json (ground truth: guides whose text
+// Score the search index against data/export/search/eval.json (ground truth: units whose text
 // contains the query string). Serve site/_site on a port first.
-// Usage: node scripts/eval-search.mjs <baseUrl> <mode: default|custom> [bundleDir]
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { makeNormalize, search } from "../src/assets/search-core.js";
+// Usage: node scripts/eval-search.mjs [baseUrl]
+import { readFileSync, writeFileSync } from "node:fs";
+import { openIndex, search } from "../src/assets/search-index.js";
 
-const [base = "http://127.0.0.1:8766/", mode = "default", bundle = "pagefind"] = process.argv.slice(2);
+const [base = "http://127.0.0.1:8766/"] = process.argv.slice(2);
 const evalSet = JSON.parse(readFileSync("../data/export/search/eval.json", "utf-8"));
-
-// mode "csi": the custom static index (bundle = its folder, e.g. "csi"); else Pagefind.
-let pf, csi, ix;
-if (mode === "csi") {
-  csi = await import("../src/assets/csi-core.js");
-  ix = await csi.openIndex(new URL(`${bundle}/`, base));
-} else {
-  const src = await (await fetch(new URL(`${bundle}/pagefind.js`, base))).text();
-  const file = join(mkdtempSync(join(tmpdir(), "pf-")), "pagefind.mjs");
-  writeFileSync(file, src);
-  pf = await import(file);
-  await pf.options({ basePath: new URL(`${bundle}/`, base).href });
-  await pf.init();
-}
-
-const guideOf = (url) => url.match(/guides\/([^/#]+)/)?.[1];
-let normalize;
-if (mode === "custom") normalize = makeNormalize(await (await fetch(new URL(`${bundle}/t2s.json`, base))).json());
-
-async function top10(q) {
-  if (mode === "csi") return (await csi.search(ix, q)).guides.slice(0, 10).map((g) => g.guide);
-  if (mode === "custom") return (await search(pf, normalize, q)).guides.slice(0, 10).map((g) => g.guide);
-  const r = await pf.search(q);
-  const ids = [];
-  for (const x of r.results) {
-    const g = guideOf((await x.data()).url);
-    if (g && !ids.includes(g)) ids.push(g);
-    if (ids.length === 10) break;
-  }
-  return ids;
-}
+const ix = await openIndex(new URL("csi/", base));
+const top10 = async (q) => (await search(ix, q)).guides.slice(0, 10).map((g) => g.guide);
 
 const rows = [];
 const t0 = performance.now();
@@ -55,7 +24,7 @@ for (const q of evalSet) {
 }
 const mean = (xs) => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
 const types = [...new Set(rows.map((r) => r.type))];
-console.log(`mode=${mode} bundle=${bundle}  queries=${rows.length}  total ${((performance.now() - t0) / 1000).toFixed(1)}s`);
+console.log(`queries=${rows.length}  total ${((performance.now() - t0) / 1000).toFixed(1)}s`);
 console.log("type".padEnd(24), "n".padStart(3), "recall@10".padStart(10), "prec@10".padStart(8), "zero".padStart(5), "ms".padStart(6));
 for (const t of [...types, "ALL"]) {
   const rs = t === "ALL" ? rows : rows.filter((r) => r.type === t);
@@ -63,4 +32,4 @@ for (const t of [...types, "ALL"]) {
     mean(rs.map((r) => r.precision)).toFixed(2).padStart(8), String(rs.filter((r) => r.zero).length).padStart(5),
     mean(rs.map((r) => r.ms)).toFixed(0).padStart(6));
 }
-writeFileSync(`../data/export/search/eval-${mode}.json`, JSON.stringify(rows, null, 1));
+writeFileSync(`../data/export/search/eval-results.json`, JSON.stringify(rows, null, 1));

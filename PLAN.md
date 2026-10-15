@@ -49,7 +49,7 @@ Confirmed by probing the live systems on 2026-10-11.
                                        ┌───────────────────────────┬──────────────────────┬────────────────┘
                                        ▼                           ▼                      ▼
                                HF dataset (Parquet)       Static site build        DPUL/Figgy contribution
-                               + DataSpace/Zenodo DOI     (11ty + Pagefind)        package (annotations, CSV)
+                               + DataSpace/Zenodo DOI     (11ty + static index)    package (annotations, CSV)
                                                           → GitHub Pages
 ```
 
@@ -86,7 +86,7 @@ Confirmed by probing the live systems on 2026-10-11.
 | Layer | Choice | Why |
 |---|---|---|
 | Site generator | **11ty (Eleventy)** with **Nunjucks** templates | Simple, stable, fast builds; data files + pagination generate one page per guide/repository/place/volume; official i18n plugin for `/zh/` and `/en/` routes; no client JS unless we add it |
-| Search | **Pagefind** (extended build) | Static, index loaded in chunks, filters/sort/sub-results; see §3.5 |
+| Search | **Custom static index** (`cah csindex` + `site/src/assets/search-index.js`; replaced Pagefind 2026-10-15) | Postings sharded by bigram, unit-level filters and counts, exact-string verification; ~0.1–0.3 s for any query; see §3.5 |
 | Map | **MapLibre GL JS** + **PMTiles** for boundary layers | Vector tiles from one static file over HTTP range requests; falls back to simplified TopoJSON per level if Pages range support proves unreliable |
 | Basemap | OpenFreeMap or a Protomaps extract | No API key; check that it loads acceptably from mainland China (see §5) |
 | Page viewer | Link to the Figgy/DPUL viewer; optional embedded **OpenSeadragon** (IIIF `info.json`) with an overlay for highlighted regions | Plain JS, no framework; keeps the originals as the destination |
@@ -97,13 +97,17 @@ Confirmed by probing the live systems on 2026-10-11.
 
 **Pipeline → site handoff.** The pipeline exports site-ready JSON (one file per entity, plus per-guide/per-volume files where large) into `site/_data/` or a build directory. 11ty reads plain JSON, so the Node side needs no Parquet/DuckDB dependency. Data is validated in the pipeline (pydantic). The pipeline also exports JSON Schemas, and a small pre-build check validates the site's input against them.
 
-**Search index build.** A post-build Node script uses the Pagefind Node API (`addCustomRecord`) to index canvas-level records from the exported JSON, with filters, sort keys and simplified/traditional/pinyin variants. Results link to the canvas anchors on guide/volume pages (`/guides/{id}/#p{seq}`). The site's HTML is indexed for guide, repository and place pages.
+**Search index build.** `cah search` writes search records (one per scanned page and per unit, with folded/encoded tokens) and `cah csindex` builds the static index from them into `data/export/csi/`, which the site build copies to `/csi/`. The browser loads a unit table once, fetches the postings shards for the query tokens, intersects them, ranks units by matching pages, and fetches page text only for the pages it shows.
 
 **Page types** (all statically generated): guide, repository, place (province → prefecture → county), wenshi volume, search, map, about/methodology, dataset/downloads.
 
 **GitHub Pages limits to design around:** 1 GB published site, ~100 GB/month soft bandwidth, 10 builds/hour, and 100 MB per file in git. Every record and all derived data must fit in that budget, which rules out one HTML page per fonds or per article (§3.5).
 
-### 3.5 Pagefind assessment
+### 3.5 Search engine
+
+**Decision (2026-10-15): custom static index, replacing Pagefind.** Measured on the full set (53,000 records), cold in a browser: 学校 274 ms vs 6.3 s, 中共 145 ms vs 4.9 s, province browse 81 ms vs 8.7 s, with identical result counts and top results. Eval set: same quality, mean 19 ms vs 349 ms. Index 110 MB vs 262 MB. The history below records how we got there.
+
+#### Pagefind assessment (historical)
 
 **Verdict: suitable for the MVP, including most "spatial" search, subject to a bake-off at the end of Phase 2.**
 

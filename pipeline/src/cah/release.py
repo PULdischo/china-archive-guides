@@ -9,6 +9,7 @@ Images are never included: pages carry IIIF image-service URLs and DPUL viewer l
 import gzip
 import json
 import shutil
+import tarfile
 from collections import Counter
 from datetime import date
 from pathlib import Path
@@ -24,8 +25,7 @@ RELEASE = ROOT / "data" / "release"
 CARD_TEMPLATE = Path(__file__).with_name("dataset_card.md")
 SITE_FILES = {  # site build inputs, published alongside the dataset for the Pages workflow
     "site/guides.jsonl.gz": EXPORT / "site" / "guides.jsonl",
-    "site/records.jsonl.gz": EXPORT / "search" / "records.jsonl",
-    "site/t2s.json": EXPORT / "search" / "t2s.json",
+    "site/csi.tar.gz": EXPORT / "csi",  # the search index (directory, ~57k files)
     "site/places.geojson": EXPORT / "site" / "places.geojson",
     "site/provinces.json": EXPORT / "site" / "provinces.json",
 }
@@ -217,7 +217,10 @@ def run(repo: str = DEFAULT_REPO) -> None:
     for dest, src in SITE_FILES.items():
         out = RELEASE / dest
         out.parent.mkdir(parents=True, exist_ok=True)
-        if dest.endswith(".gz"):
+        if src.is_dir():
+            with tarfile.open(out, "w:gz") as tar:
+                tar.add(src, arcname=src.name)
+        elif dest.endswith(".gz"):
             with src.open("rb") as fi, gzip.open(out, "wb", compresslevel=6) as fo:
                 shutil.copyfileobj(fi, fo)
         else:

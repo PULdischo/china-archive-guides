@@ -34,8 +34,9 @@ log "rapidocr fallback (blocked / failed pages)"
 uv run cah ocr --engine rapidocr --fallback-only | tail -2
 log "export"
 uv run cah export | sed -n 3,9p
-log "search records"
+log "search records + index"
 uv run cah search | tail -1
+uv run cah csindex | tail -1
 log "site build"
 (cd ../site && npm run build 2>&1 | grep -E "Wrote|Indexed|rror")
 log "DONE"

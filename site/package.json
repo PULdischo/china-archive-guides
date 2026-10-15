@@ -3,13 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "NODE_OPTIONS=--max-old-space-size=16384 eleventy && node --max-old-space-size=16384 scripts/build-search-index.mjs ../data/export/search/records.jsonl _site/pagefind",
-    "dev": "npm run build && eleventy --serve",
-    "eval:search": "node scripts/eval-search.mjs http://127.0.0.1:8766/ custom pagefind"
+    "build": "NODE_OPTIONS=--max-old-space-size=16384 eleventy",
+    "dev": "NODE_OPTIONS=--max-old-space-size=16384 eleventy --serve",
+    "eval:search": "node scripts/eval-search.mjs http://127.0.0.1:8766/"
   },
   "devDependencies": {
-    "@11ty/eleventy": "3.1.6",
-    "pagefind": "1.5.2"
+    "@11ty/eleventy": "3.1.6"
   },
   "dependencies": {
     "maplibre-gl": "5.24.0"

@@ -1,18 +1,15 @@
-"""Search index inputs and the search evaluation set.
+"""Search records and the search evaluation set.
 
-Pagefind's own Chinese segmentation splits index text and queries differently
-(e.g. 四川省粮食 finds nothing while 四川 finds 27 guides), so we tokenize
-ourselves: text is folded to simplified characters, spaces between Han
-characters are dropped (OCR artifacts like 全 宗 名 称), and each Han run is
-indexed as overlapping unigrams + bigrams. Pagefind 1.5+ re-segments CJK
-queries with the browser's Intl.Segmenter, so Han tokens are encoded as ASCII
-words (四川 -> h22235x24029) that no segmenter or stemmer will alter. The
-browser applies the same normalization and encoding to queries
-(site/src/assets/search-core.js) and then verifies exact substrings on the
-top candidates.
+Text is folded to simplified characters, spaces between Han characters are
+dropped (OCR artifacts like 全 宗 名 称), and each Han run is tokenized as
+overlapping unigrams + bigrams, stored under ASCII keys (四川 -> h22235x24029).
+The browser applies the same normalization to queries (site/src/assets/tokenize.js)
+and verifies exact substrings on the pages it shows. (We first did this on top of
+Pagefind, whose own Chinese segmentation split index text and queries differently;
+csindex.py now builds the index from these records.)
 
 Outputs (data/export/search/):
-  records.jsonl  one record per scanned page and per guide, for the Pagefind Node API
+  records.jsonl  one record per scanned page and per unit (input to csindex.py)
   t2s.json       character map traditional -> simplified (for the browser)
   eval.json      evaluation queries with ground truth (guides containing the string)
 """

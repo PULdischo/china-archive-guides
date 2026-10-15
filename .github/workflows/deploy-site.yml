@@ -1,4 +1,5 @@
-# Build the 11ty + Pagefind site from the committed export and deploy to GitHub Pages.
+# Build the 11ty site (with its static search index) and deploy to GitHub Pages.
+# TODO: fetch the site bundle (guides.jsonl, csi) from the Hugging Face dataset release first.
 # The pipeline (harvest/OCR) runs separately; this job only needs data/export/site/.
 name: Deploy site
 

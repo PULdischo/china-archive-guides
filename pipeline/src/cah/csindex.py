@@ -1,8 +1,8 @@
-"""Custom static search index (prototype, compared against Pagefind).
+"""Static search index for the site (replaced Pagefind, 2026-10-15).
 
-Pagefind scores and builds a result for every matching record (~0.3 ms each), so very common terms
-(学校: 6,152 pages) take seconds. Our search only needs set intersection, per-unit counts and exact
-verification of the displayed pages, so this index stores just that:
+Pagefind scored and built a result for every matching record (~0.3 ms each), so very common terms
+(学校: 6,152 pages) took seconds. Our search only needs set intersection, per-unit counts and exact
+verification of the displayed pages, so this index stores just that (学校: ~0.3 s cold in a browser):
 
   csi/units.json        one entry per unit (handbook or wenshi volume): title, href, year, filters
   csi/docs.bin          per document: unit index (uint16) + page number (uint16), little-endian
@@ -10,7 +10,7 @@ verification of the displayed pages, so this index stores just that:
                         u32 count, then per token: u8 len, token (ASCII), varint n, n varint gaps
   csi/d/{doc}.json      {"t": page text, "v": DPUL viewer URL} for verification and excerpts
 
-Documents are the same records as the Pagefind index (records.jsonl): scanned pages plus one title
+Documents are the search records (records.jsonl from search.py): scanned pages plus one title
 record per unit. Tokens are the encoded unigrams/bigrams/words already in each record's content.
 """
 

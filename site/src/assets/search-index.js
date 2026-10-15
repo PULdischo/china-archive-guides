@@ -1,6 +1,7 @@
-// Query side of the custom static index (pipeline/src/cah/csindex.py). Same result shape as
-// search-core.js `search`/`browse`, so the search page can use either engine.
-import { makeNormalize, queryTerms, encode } from "./search-core.js";
+// Query side of the static search index (pipeline/src/cah/csindex.py): intersect postings, filter
+// and count at the level of units (handbooks, wenshi volumes), verify exact strings on the pages
+// shown. Cost does not grow with how many pages match.
+import { makeNormalize, queryTerms, encode } from "./tokenize.js";
 
 const fnv1a = (s) => {
   let h = 0x811c9dc5;
