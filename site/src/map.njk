@@ -13,7 +13,7 @@ permalink: /map/
 <h2>Guides by province</h2>
 <ol class="province-list">
   {% for p in provinces.provinces %}{% if p.count %}
-  <li><a href="/search/?Province={{ p.zh | urlencode }}"><span lang="zh">{{ p.zh }}</span> <span class="en">{{ p.en }}</span></a><span class="n">{{ p.count }}</span></li>
+  <li><a href="{{ p.zh | browse("Province") }}"><span lang="zh">{{ p.zh }}</span> <span class="en">{{ p.en }}</span></a><span class="n">{{ p.count }}</span></li>
   {% endif %}{% endfor %}
 </ol>
 <p class="note">{{ provinces.source }}. Prefecture and county shapes: Princeton East Asian Library ArcGIS layers (2024).</p>

@@ -1,0 +1,38 @@
+---
+layout: layout.njk
+pagination:
+  data: browse
+  size: 1
+  alias: b
+permalink: "/browse/{{ b.facetSlug }}/{{ b.valueSlug }}/"
+eleventyComputed:
+  title: "{{ b.label }}"
+---
+<p class="kind">Browse · {{ b.facetLabel }}</p>
+<h1 lang="zh">{{ b.label }}</h1>
+<p class="note">{{ b.handbooks.length }} archival handbook{% if b.handbooks.length != 1 %}s{% endif %} and
+  {{ b.wenshi.length }} wenshi ziliao volume{% if b.wenshi.length != 1 %}s{% endif %}.
+  {% if b.mapId %}<a href="/map/#{{ b.mapId }}">Show on the map</a>.{% endif %}</p>
+
+<form action="/search/" method="get" class="searchbox" role="search">
+  <input type="hidden" name="{{ b.facet }}" value="{{ b.value }}">
+  <label for="q" class="visually-hidden">Search within {{ b.label }}</label>
+  <input id="q" name="q" type="search" placeholder="Search within {{ b.value }}" lang="zh" autocomplete="off">
+  <button type="submit">Search</button>
+</form>
+
+{% if b.handbooks.length %}
+<h2>Archival handbooks <small>({{ b.handbooks.length }})</small></h2>
+<ul class="browse-list">
+  {% for u in b.handbooks %}<li><a href="{{ u.href }}" lang="zh">{{ u.title }}</a>{% if u.year %} <span class="year">{{ u.year }}</span>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if b.wenshi.length %}
+<h2>Wenshi ziliao volumes <small>({{ b.wenshi.length }})</small></h2>
+<ul class="browse-list">
+  {% for u in b.wenshi %}<li><a href="{{ u.href }}" lang="zh">{{ u.title }}</a>{% if u.year %} <span class="year">{{ u.year }}</span>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endif %}

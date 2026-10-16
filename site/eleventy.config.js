@@ -1,4 +1,5 @@
 import { HtmlBasePlugin } from "@11ty/eleventy";
+import { browsePath } from "./src/assets/browse-slugs.js";
 
 export default function (eleventyConfig) {
   // GitHub Pages project sites live under /<repo>/; CI sets PATH_PREFIX.
@@ -32,6 +33,8 @@ export default function (eleventyConfig) {
     });
   });
 
+  // Root-relative URL of a pre-rendered browse page, e.g. browse("Province", "江苏").
+  eleventyConfig.addFilter("browse", (value, facet) => "/" + browsePath(facet, value));
   eleventyConfig.addFilter("decade", (year) => (year ? `${Math.floor(year / 10) * 10}s` : null));
   eleventyConfig.addFilter("iiif", (service, size = "!400,600") => `${service}/full/${size}/0/default.jpg`);
   eleventyConfig.addFilter("json", (v) => JSON.stringify(v));

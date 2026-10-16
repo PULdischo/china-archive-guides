@@ -171,6 +171,12 @@ def write_site_guides(guides: list[dict]) -> None:
     (EXPORT / "site" / "guides.json").unlink(missing_ok=True)  # superseded
 
 
+def browse_href(province_zh: str) -> str:
+    """Pre-rendered province browse page (slugs as in site/src/assets/browse-slugs.js)."""
+    from urllib.parse import quote
+    return f"/browse/province/{quote({'中央/全国': 'national'}.get(province_zh, province_zh))}/"
+
+
 def run() -> None:
     guides = records.build()
     places = geo.places()
@@ -251,7 +257,7 @@ def run() -> None:
         features.append({"type": "Feature", "geometry": pf["geometry"], "properties": {
             "id": f"province:{pf['code']}", "level": "province", "code": pf["code"], "name_zh": zh,
             "name_pinyin": en, "count": n, "cls": sum(n > b for b in breaks),
-            "browse": f"/search/?Province={quote(zh)}"}})
+            "browse": browse_href(zh)}})
     for p in places:
         if not p["geometry"] or p["level"] not in ("prefecture", "county"):
             continue
@@ -268,7 +274,7 @@ def run() -> None:
         props = {k: p[k] for k in ("id", "level", "code", "name_zh", "name_pinyin")}
         props.update(guides=linked, province_zh=prov[0] if prov else None,
                      province_count=prov_count.get(p["code"][:2], 0),
-                     browse=f"/search/?Province={quote(prov[0])}" if prov else None)
+                     browse=browse_href(prov[0]) if prov else None)
         features.append({"type": "Feature", "properties": props, "geometry": p["geometry"]})
     (EXPORT / "site").mkdir(parents=True, exist_ok=True)
     (EXPORT / "site" / "places.geojson").write_text(

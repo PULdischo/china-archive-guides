@@ -1,5 +1,6 @@
 // Search page over the static search index (search-index.js).
 import * as engine from "./search-index.js";
+import { browsePath } from "./browse-slugs.js";
 
 const root = document.getElementById("search-app");
 const base = root.dataset.base.replace(/\/?$/, "/");
@@ -16,6 +17,17 @@ const NEW_TAB = ' target="_blank" rel="noopener"';
 const NEW_TAB_LABEL = '<span class="ext" aria-hidden="true">↗</span>' +
   '<span class="visually-hidden"> (opens in a new tab, <span lang="zh">在新标签页打开</span>)</span>';
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+// A blank query with a single filter is a pre-rendered browse page: go there before loading the index.
+{
+  const params = new URLSearchParams(location.search);
+  const filters = [...params.entries()].filter(([k, v]) => k !== "q" && v);
+  const path = !(params.get("q") || "").trim() && filters.length === 1 && browsePath(...filters[0]);
+  if (path) {
+    location.replace(base + path);
+    await new Promise(() => {}); // stop here while the browser navigates
+  }
+}
 
 const ix = await engine.openIndex(new URL(`${base}csi/`, location.href));
 const normalize = ix.normalize;
@@ -89,7 +101,7 @@ async function run(append = false) {
   const offset = append ? state.offset : 0;
   const res = state.q.trim()
     ? await search(state.q, { filters: state.filters, offset })
-    : await browse(state.filters, { offset }); // e.g. /search/?Province=江苏 from the home-page map
+    : await browse(state.filters, { offset }); // combined filters; single ones are static browse pages
   render(res, append);
 }
 

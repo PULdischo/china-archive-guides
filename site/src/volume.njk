@@ -19,7 +19,7 @@ eleventyComputed:
 
 <dl class="meta">
   <dt>Index</dt><dd lang="zh"><a href="/guides/{{ v.item.id }}/">{{ v.item.title }}</a> ({{ v.item.year }})</dd>
-  <dt>Province</dt><dd lang="zh">{% if v.item.province %}<a href="/search/?Province={{ v.item.province.zh | urlencode }}">{{ v.item.province.zh }}</a>{% else %}—{% endif %}</dd>
+  <dt>Province</dt><dd lang="zh">{% if v.item.province %}<a href="{{ v.item.province.zh | browse("Province") }}">{{ v.item.province.zh }}</a>{% else %}—{% endif %}</dd>
   <dt>Place</dt><dd lang="zh">{% if v.place %}<a href="/map/#{{ v.place.id }}">{{ v.place.name_zh }}</a>{% else %}—{% endif %}</dd>
   <dt>Scans</dt><dd>{{ v.pages.length }}{% if v.pages.length < v.canvas_count %} of {{ v.canvas_count }} (sample){% endif %}</dd>
   <dt>Rights</dt><dd>{{ v.item.rights }}</dd>

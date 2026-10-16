@@ -102,6 +102,12 @@ details.extracted summary { cursor: pointer; font-weight: 600; }
 #search-app mark { background: color-mix(in srgb, var(--accent) 25%, transparent); color: inherit; padding: 0 .1em; }
 #search-app .more { margin-top: 1rem; }
 
+/* Browse pages */
+.browse-list { list-style: none; padding: 0; columns: 2 22rem; column-gap: 2rem; }
+.browse-list li { break-inside: avoid; padding: .2rem 0; border-bottom: 1px solid var(--border); }
+.browse-list .year { color: var(--muted); font-size: .85rem; }
+h2 small { color: var(--muted); font-weight: 400; font-size: .9rem; }
+
 /* Home: browse by place */
 .browse-place { margin: 2rem 0; }
 .place-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(14rem, 2fr); gap: 1.5rem; align-items: start; }

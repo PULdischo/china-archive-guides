@@ -19,7 +19,7 @@ layout: layout.njk
       <svg viewBox="{{ provinces.viewBox }}" role="group" aria-labelledby="pm-title">
         <title id="pm-title">Provinces with archive guides, shaded by number of guides</title>
         {% for p in provinces.provinces %}{% if p.d %}
-        <a href="/search/?Province={{ p.zh | urlencode }}" class="prov c{{ p.cls }}" aria-label="{{ p.zh }} {{ p.en }}: {{ p.count }} guides">
+        <a href="{{ p.zh | browse("Province") }}" class="prov c{{ p.cls }}" aria-label="{{ p.zh }} {{ p.en }}: {{ p.count }} guides">
           <title>{{ p.zh }} {{ p.en }}: {{ p.count }} guide{% if p.count != 1 %}s{% endif %}</title>
           <path d="{{ p.d }}"/>
         </a>
@@ -36,7 +36,7 @@ layout: layout.njk
     <div class="province-list-wrap">
       <ol class="province-list">
         {% for p in provinces.provinces %}{% if p.count %}
-        <li><a href="/search/?Province={{ p.zh | urlencode }}"><span lang="zh">{{ p.zh }}</span> <span class="en">{{ p.en }}</span></a><span class="n">{{ p.count }}</span></li>
+        <li><a href="{{ p.zh | browse("Province") }}"><span lang="zh">{{ p.zh }}</span> <span class="en">{{ p.en }}</span></a><span class="n">{{ p.count }}</span></li>
         {% endif %}{% endfor %}
       </ol>
       <p><a href="/map/">Open the full map (prefectures and counties) →</a></p>
