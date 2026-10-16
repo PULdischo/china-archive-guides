@@ -35,6 +35,8 @@ export default function (eleventyConfig) {
 
   // Root-relative URL of a pre-rendered browse page, e.g. browse("Province", "江苏").
   eleventyConfig.addFilter("browse", (value, facet) => "/" + browsePath(facet, value));
+  eleventyConfig.addFilter("bytes", (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`));
+  eleventyConfig.addFilter("num", (n) => (n == null ? "" : Number(n).toLocaleString("en-US")));
   eleventyConfig.addFilter("decade", (year) => (year ? `${Math.floor(year / 10) * 10}s` : null));
   eleventyConfig.addFilter("iiif", (service, size = "!400,600") => `${service}/full/${size}/0/default.jpg`);
   eleventyConfig.addFilter("json", (v) => JSON.stringify(v));

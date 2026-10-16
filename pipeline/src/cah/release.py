@@ -20,7 +20,13 @@ import pyarrow.parquet as pq
 
 from .config import EXPORT, ROOT
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
+CHANGELOG = [  # newest first; rendered into the dataset card
+    ("0.1.1", "Downloads for spreadsheet and SQL users (flat CSVs, per-province wenshi CSVs, a ZIP of everything, "
+              "an SQLite database). Site bundle now ships the static search index. Data tables unchanged."),
+    ("0.1.0", "First release: all {n_handbooks} archival handbooks ({n_handbook_pages} pages) and all {n_wenshi} "
+              "wenshi ziliao provincial indexes ({n_wenshi_volumes} volumes, {n_wenshi_pages} pages)."),
+]
 RELEASE = ROOT / "data" / "release"
 CARD_TEMPLATE = Path(__file__).with_name("dataset_card.md")
 SITE_FILES = {  # site build inputs, published alongside the dataset for the Pages workflow
@@ -168,7 +174,13 @@ def _write(name: str, rows, batch: int = 50_000) -> int:
     return n
 
 
-DEFAULT_REPO = "PULdischo/china-archive-guides"  # matches the GitHub repository; change with --repo
+DEFAULT_REPO = "PULdischo/china-archive-guides"
+LICENSE_TEXT = """CC0 1.0 Universal (public domain dedication): https://creativecommons.org/publicdomain/zero/1.0/
+
+The structured data and transcriptions in this dataset are dedicated to the public domain. Source scans are
+in Princeton University Library's DPUL (https://dpul.princeton.edu/ealtoc) under their own rights statements;
+please link to DPUL when presenting material from the dataset.
+"""  # matches the GitHub repository; change with --repo
 
 
 def _stats(site_guides: list[dict], counts: dict) -> dict:
@@ -228,10 +240,21 @@ def run(repo: str = DEFAULT_REPO) -> None:
     print(f"  site bundle      {sum(p.stat().st_size for p in (RELEASE / 'site').iterdir()) / 1e6:7.1f} MB")
 
     stats = {**_stats(site_guides, counts), "repo": repo}
+    stats["changelog"] = "\n".join(f"- **{v}**: {text.format(**stats)}" for v, text in CHANGELOG)
     (RELEASE / "README.md").write_text(Template(CARD_TEMPLATE.read_text(encoding="utf-8")).substitute(stats),
                                        encoding="utf-8")
     (RELEASE / "stats.json").write_text(json.dumps(stats, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"  dataset card     {RELEASE / 'README.md'}  (v{VERSION})")
+
+    from . import downloads
+    readme = (RELEASE / "README.md").read_text(encoding="utf-8")
+    manifest = downloads.build(RELEASE, VERSION, readme, LICENSE_TEXT)
+    site_manifest = {"version": VERSION, "repo": repo, "files": manifest,
+                     "dictionary": {k: v for k, v in downloads.COLUMNS.items()}, "titles": downloads.TITLES}
+    (EXPORT / "site" / "downloads.json").write_text(json.dumps(site_manifest, ensure_ascii=False, indent=1),
+                                                     encoding="utf-8")
+    print(f"  downloads        {len(manifest)} files, "
+          f"{sum(f['bytes'] for f in manifest) / 1e6:.0f} MB (data/release/downloads/)")
 
 
 def publish(repo: str, private: bool = False) -> None:
@@ -247,7 +270,8 @@ def publish(repo: str, private: bool = False) -> None:
         raise SystemExit("No release built; run `uv run cah release` first")
     api = HfApi(token=token)
     api.create_repo(repo, repo_type="dataset", private=private, exist_ok=True)
+    # Replace (not just add to) the generated folders, so files dropped from a release disappear.
     commit = api.upload_folder(repo_id=repo, repo_type="dataset", folder_path=RELEASE,
-                               commit_message=f"Release v{VERSION}")
+                               commit_message=f"Release v{VERSION}", delete_patterns=["site/*", "downloads/**"])
     api.create_tag(repo, repo_type="dataset", tag=f"v{VERSION}", revision=commit.oid, exist_ok=True)
     print(f"  published https://huggingface.co/datasets/{repo} (tag v{VERSION})")

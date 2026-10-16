@@ -1,0 +1,91 @@
+---
+layout: layout.njk
+title: Data
+permalink: /data/
+---
+<h1>Data</h1>
+{% set d = downloads %}
+<p>Everything on this site is available as an open dataset: the guides, their scanned pages' transcriptions,
+  the fonds lists and contents entries of {{ guides | whereEq("kind", "handbook") | length }} archival handbooks,
+  and the index entries of {{ guides | whereEq("kind", "wenshi") | length }} wenshi ziliao provincial indexes.
+  It is released under <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>{% if d %}, version {{ d.version }}{% endif %}.
+  Text and structured fields are machine-extracted and unreviewed; the scans in
+  <a href="https://dpul.princeton.edu/ealtoc">DPUL</a> remain the authoritative source.</p>
+
+{% if not d %}
+<p class="note">The download list has not been generated yet (run <code>uv run cah release</code>).</p>
+{% else %}
+{% if not site.dataPublic %}
+<p class="flag">The dataset is not public yet: the download links below will work once it is published.</p>
+{% endif %}
+
+<h2>Which file do I want?</h2>
+<table class="data">
+  <thead><tr><th>I want…</th><th>Download</th><th>Format</th><th>Size</th></tr></thead>
+  <tbody>
+    {% set f = d.byFile["csv/fonds.csv"] %}
+    <tr><td>Fonds (全宗) held by Chinese archives, with dates, in a spreadsheet</td>
+      <td><a href="{{ f.url }}">fonds.csv</a> ({{ f.rows | num }} rows)</td><td>CSV</td><td>{{ f.bytes | bytes }}</td></tr>
+    {% set f = d.byFile["csv/toc_entries.csv"] %}
+    <tr><td>Contents of the archival handbooks</td>
+      <td><a href="{{ f.url }}">toc_entries.csv</a> ({{ f.rows | num }} rows)</td><td>CSV</td><td>{{ f.bytes | bytes }}</td></tr>
+    <tr><td>Wenshi ziliao articles for one province</td>
+      <td><a href="#wenshi">One CSV per province</a> (below)</td><td>CSV</td><td>up to {{ (d.provinces | sort(true, false, "bytes"))[0].bytes | bytes }}</td></tr>
+    {% set f = d.byFile["csv/guides.csv"] %}
+    <tr><td>The list of guides, with catalog details and links</td>
+      <td><a href="{{ f.url }}">guides.csv</a> ({{ f.rows | num }} rows)</td><td>CSV</td><td>{{ f.bytes | bytes }}</td></tr>
+    {% set f = d.byFile["china-archive-guides-csv.zip"] %}
+    <tr><td>Everything, for spreadsheets</td>
+      <td><a href="{{ f.url }}">china-archive-guides-csv.zip</a> (all CSVs + data dictionary)</td><td>ZIP</td><td>{{ f.bytes | bytes }}</td></tr>
+    {% set f = d.byFile["china-archive-guides.sqlite.zip"] %}
+    <tr><td>Everything in one database, including page transcriptions</td>
+      <td><a href="{{ f.url }}">china-archive-guides.sqlite.zip</a></td><td>SQLite</td><td>{{ f.bytes | bytes }}</td></tr>
+    <tr><td>To work in Python, R or DuckDB</td>
+      <td><a href="{{ d.datasetUrl }}">Hugging Face dataset</a> (7 tables)</td><td>Parquet</td><td>~95 MB</td></tr>
+  </tbody>
+</table>
+<p class="note">CSV files are UTF-8 with a byte-order mark, so Excel shows Chinese correctly. Each row includes the
+  guide's title and province and a link to the scan in DPUL, so no joins are needed. Lists inside a cell are
+  separated by "; ".</p>
+
+<h2>All downloads</h2>
+<table class="data">
+  <thead><tr><th>File</th><th>Contents</th><th>Format</th><th>Rows</th><th>Size</th></tr></thead>
+  <tbody>{% for f in d.files %}{% if f.group != "wenshi_by_province" %}
+    <tr><td><a href="{{ f.url }}">{{ f.file | replace("downloads/", "") }}</a></td><td>{{ f.title }}{% if f.note %}<br><small>{{ f.note }}</small>{% endif %}</td>
+      <td>{{ f.format }}</td><td>{{ f.rows | num }}</td><td>{{ f.bytes | bytes }}</td></tr>
+  {% endif %}{% endfor %}</tbody>
+</table>
+
+<h2 id="wenshi">Wenshi ziliao index entries by province</h2>
+<ul class="browse-list">
+  {% for f in d.provinces | sort(false, false, "title") %}<li><a href="{{ f.url }}" lang="zh">{{ f.title }}</a>
+    <span class="year">{{ f.rows | num }} entries · {{ f.bytes | bytes }}</span></li>
+  {% endfor %}
+</ul>
+
+<h2>Data dictionary</h2>
+{% for name, cols in d.dictionary %}
+<details class="extracted">
+  <summary>{{ d.titles[name] }} — <code>{{ name }}.csv</code></summary>
+  <table class="data"><tbody>{% for c in cols %}<tr><td><code>{{ c[0] }}</code></td><td>{{ c[1] }}</td></tr>{% endfor %}</tbody></table>
+</details>
+{% endfor %}
+
+<h2>For programmers</h2>
+<pre><code>from datasets import load_dataset
+fonds = load_dataset("{{ d.repo }}", "fonds", split="train")
+
+-- DuckDB
+SELECT name, date_start, date_end FROM 'hf://datasets/{{ d.repo }}/data/fonds.parquet'
+WHERE name LIKE '%粮食局%';</code></pre>
+<p>Tables: <code>guides</code>, <code>volumes</code>, <code>pages</code> (HTML and plain-text transcriptions),
+  <code>fonds</code>, <code>toc_entries</code>, <code>wenshi_articles</code>, <code>places</code>. Each file is listed with
+  its SHA-256 checksum in <a href="{{ d.manifestUrl }}">manifest.json</a>.
+  The <a href="{{ d.datasetUrl }}">dataset card</a> describes how the data was made and its limitations.</p>
+
+<h2>Citation</h2>
+<pre><code>Princeton University Library. Chinese Archival Handbooks and Wenshi Ziliao Indexes
+(Princeton East Asian Library), version {{ d.version }}. Hugging Face, 2026.
+{{ d.datasetUrl }}</code></pre>
+{% endif %}

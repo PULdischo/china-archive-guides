@@ -113,6 +113,20 @@ JOIN 'hf://datasets/$repo/data/guides.parquet' g ON g.id = f.guide_id
 WHERE f.name LIKE '%粮食局%';
 ```
 
+## Downloads without code
+
+The `downloads/` folder has the same data for spreadsheet and SQL users:
+
+- **Flat CSV files** (`downloads/csv/`): guides, volumes, fonds, contents entries and places, with the guide
+  title, province and DPUL links on every row, so no joins are needed. Files are UTF-8 with a byte-order
+  mark (Excel shows Chinese correctly).
+- **Wenshi ziliao index entries, one CSV per province** (`downloads/csv/wenshi_articles/`). All of them
+  together (over 1M rows) are in `downloads/wenshi_articles.csv.gz`.
+- **Everything in one file**: `downloads/china-archive-guides-csv.zip` (all CSVs, data dictionary, README,
+  license) and `downloads/china-archive-guides.sqlite.zip` (an SQLite database with all tables (page text,
+  not HTML) and joined views `fonds_flat` and `wenshi_flat`).
+- `downloads/manifest.json` lists every file with row counts and SHA-256 checksums.
+
 ## How it was made
 
 1. **Harvest.** Catalog metadata and IIIF manifests were harvested from DPUL and Figgy item by item
@@ -193,5 +207,4 @@ national outline. geoBoundaries' Xinjiang boundary includes Aksai Chin, which is
 
 ## Changelog
 
-- **$version** ($date): first release. All $n_handbooks archival handbooks ($n_handbook_pages pages) and
-  all $n_wenshi wenshi ziliao provincial indexes ($n_wenshi_volumes volumes, $n_wenshi_pages pages).
+$changelog
