@@ -32,6 +32,31 @@ HTML rules (follow exactly):
 PROMPT_V3_VERSION = "wenshi-v3"
 
 
+_BRACKETED = re.compile(r"[（(]\s*(\d+)\s*[)）]")
+_RANGE = re.compile(r"(\d+)(?:[-—–~～]+\d+)?")
+_NAME_THEN_PAGE = re.compile(r"[^\d年辑期刊元/.]+?(\d+)")  # author glued to the page: 刘士裕302
+
+
+def page_value(printed: str) -> tuple[int | None, str | None]:
+    """(page, page_raw) from the printed page cell. The page is a bracketed number, a bare number or the
+    start of a range, or a number after a glued-on name; anything else ("期刊 4/94", "选辑13", "公元1888年")
+    gives no page. page_raw keeps the printed text whenever it is more than the page itself."""
+    compact = "".join(printed.split())
+    if not compact or re.fullmatch(r"[（(][)）]", compact):
+        return None, None
+    s = re.sub(r"^\d+首", "", compact)  # leading poem count: "1 首 13" is page 13
+    if m := _BRACKETED.findall(s):
+        page = int(m[-1])
+    elif (m := _RANGE.fullmatch(s)) or (m := _NAME_THEN_PAGE.fullmatch(s)):
+        page = int(m.group(1))
+    else:
+        page = None
+    if page is not None and page > 9999:  # five or more digits: numbers run together, not a page
+        page = None
+    plain = page is not None and re.fullmatch(r"[（(]?\d+[)）]?", compact) is not None
+    return page, None if plain else " ".join(printed.split())
+
+
 class _Entries(HTMLParser):
     """Articles from v3 HTML (and v2 HTML where it used ul.toc), carrying series/issue in ctx."""
 
@@ -55,7 +80,7 @@ class _Entries(HTMLParser):
         if tag in ("h3", "h4") and self.head == tag:
             text, self.head = self.buf.strip(), None
             m = re.search(r"第\s*(\d+)\s*[辑期]", text)
-            if tag == "h3":
+            if tag == "h3" and not extract.IMPRINT_LINE.search(text):  # 出版：… is not a series
                 self.ctx["series"], self.ctx["issue"] = text, None
             elif m:
                 self.ctx["issue"] = int(m.group(1))
@@ -69,12 +94,12 @@ class _Entries(HTMLParser):
             if not self.spans:  # model ignored the span structure: try the leader-line rule
                 self.loose.append(c["raw"].strip())
                 return
-            pg = re.sub(r"\D", "", c["pg"])
+            page, page_raw = page_value(c["pg"])
             title = " ".join(c["t"].split())
             if title:
                 self.out.append({"series": self.ctx.get("series"), "issue": self.ctx.get("issue"),
                                  "title": title, "author": " ".join(c["au"].split()) or None,
-                                 "page": int(pg) if pg else None})
+                                 "page": page, "page_raw": page_raw})
 
     def handle_data(self, data):
         if self.cur is not None:
@@ -105,7 +130,8 @@ def parse_articles(html: str, ctx: dict) -> list[dict]:
     p.feed(markup.sanitize(html or ""))
     p.close()
     entries = _merge_wrapped(p.out, ctx)
-    return entries + extract.articles(p.loose, ctx)  # fallback: "title……author(page)" lines
+    # Fallback for plain "title……author(page)" lines; these never change series/issue.
+    return entries + extract.articles(p.loose, ctx, headings=False)
 
 
 # ---- prompt test -------------------------------------------------------------------------

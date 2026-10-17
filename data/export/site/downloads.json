@@ -1,5 +1,5 @@
 {
- "version": "0.1.1",
+ "version": "0.1.2",
  "repo": "PULdischo/china-archive-guides",
  "files": [
   {
@@ -58,8 +58,8 @@
    "file": "downloads/csv/wenshi_articles/上海.csv",
    "format": "CSV",
    "rows": 11222,
-   "bytes": 4939598,
-   "sha256": "71d0217e0fea755f81ce59c481744169e510dd68b9e7731eeaf060907bbe607b",
+   "bytes": 4925293,
+   "sha256": "af03436faa5c4bac43dfff242cdde66c8c3ab62dbd0d523a407c8199d7de21f0",
    "note": ""
   },
   {
@@ -68,8 +68,8 @@
    "file": "downloads/csv/wenshi_articles/云南.csv",
    "format": "CSV",
    "rows": 46739,
-   "bytes": 20705331,
-   "sha256": "514331df63aebfd47e314791b02dc2fd104627301a49950b2504d01b52eb6751",
+   "bytes": 20708114,
+   "sha256": "176e81949a34cff44b90a78870dadd49ead5bfef6c85f7bd9589586927e8ce80",
    "note": ""
   },
   {
@@ -78,8 +78,8 @@
    "file": "downloads/csv/wenshi_articles/内蒙古.csv",
    "format": "CSV",
    "rows": 13292,
-   "bytes": 6175741,
-   "sha256": "fc514c445d94fdc27d4737009783e955594eb9c5b36c9104dbce629489ce0a56",
+   "bytes": 6067750,
+   "sha256": "9417b133d43ecfe6f0a4b847a2e09995f604fb2469bcdc02c83cd2e965a1fa9a",
    "note": ""
   },
   {
@@ -87,9 +87,9 @@
    "title": "北京",
    "file": "downloads/csv/wenshi_articles/北京.csv",
    "format": "CSV",
-   "rows": 18355,
-   "bytes": 8380357,
-   "sha256": "582c65eb023b3192132c0428b7eccf65e86f5e6f78fc2be8132f170a265e905e",
+   "rows": 18339,
+   "bytes": 8237443,
+   "sha256": "b0944e2359054ee42d290c7ff73ae168dbbc420270f5389a3669316ad20a1702",
    "note": ""
   },
   {
@@ -98,8 +98,8 @@
    "file": "downloads/csv/wenshi_articles/四川.csv",
    "format": "CSV",
    "rows": 75189,
-   "bytes": 32939995,
-   "sha256": "f4bcdbb5cd177387c94ae5bec165cb13804dc70f32f0b7f5c5bb2c3182ecc814",
+   "bytes": 32965725,
+   "sha256": "270c33ceaa2ef880d609b6c6d5939ce720b7225e47d235dd6c59e307aff1ea36",
    "note": ""
   },
   {
@@ -108,8 +108,8 @@
    "file": "downloads/csv/wenshi_articles/天津.csv",
    "format": "CSV",
    "rows": 12406,
-   "bytes": 5428392,
-   "sha256": "2ec78ec19e5b73852fba9e84c3cba50c956e31cf05b6869131c689284e528cd9",
+   "bytes": 5397306,
+   "sha256": "ce2f1e66f8a0e211f846cb337b6ac1b4b68578e5fafda1f8e9832e6866b29f00",
    "note": ""
   },
   {
@@ -118,8 +118,8 @@
    "file": "downloads/csv/wenshi_articles/宁夏.csv",
    "format": "CSV",
    "rows": 5952,
-   "bytes": 2594401,
-   "sha256": "f774b2a2013c94744d6f68d8a3f0060adf36436172c52a2fe4285a7f0c5429e0",
+   "bytes": 2598683,
+   "sha256": "2e53794a117b340ded9577173557b9b4c47b3be380740c701998fa3a3ed774b6",
    "note": ""
   },
   {
@@ -128,8 +128,8 @@
    "file": "downloads/csv/wenshi_articles/安徽.csv",
    "format": "CSV",
    "rows": 45518,
-   "bytes": 19843193,
-   "sha256": "45aa89060b30eba60470d4a5d5a89764bdd392e9521239b52d047da43fce81dd",
+   "bytes": 19705276,
+   "sha256": "f68fbe6dd5e73b5ba4dd365260af74981d0f04c686972a99d60e8a929832c923",
    "note": ""
   },
   {
@@ -138,8 +138,8 @@
    "file": "downloads/csv/wenshi_articles/山东.csv",
    "format": "CSV",
    "rows": 87124,
-   "bytes": 38079822,
-   "sha256": "668dc40bd59452a22163563e51a241febdcaf6935c59b7049e3218b24b5d74c5",
+   "bytes": 37409599,
+   "sha256": "d0bae26ed1bc5398939729380a2bf256e6d4d580cfe7e76fe65a151d9199fd1a",
    "note": ""
   },
   {
@@ -147,9 +147,9 @@
    "title": "山西",
    "file": "downloads/csv/wenshi_articles/山西.csv",
    "format": "CSV",
-   "rows": 44563,
-   "bytes": 18989594,
-   "sha256": "0da421ff3984a78db2b5434304cc09d2526980c709b3488d955d5314771a8a35",
+   "rows": 44561,
+   "bytes": 18987735,
+   "sha256": "9e0e81995d8ac0f09454f8c70350000859a3eb451bdb5a3bc8356137b352d78f",
    "note": ""
   },
   {
@@ -158,8 +158,8 @@
    "file": "downloads/csv/wenshi_articles/广东.csv",
    "format": "CSV",
    "rows": 76108,
-   "bytes": 33108891,
-   "sha256": "01908cb872df8c9b24f7daf889b8ac92f3971130118fad64672702622f69a4f2",
+   "bytes": 33076862,
+   "sha256": "a9d1a8d36ace729ff1d9d16f58505fffc61fd1e20d416f9c6accde07613b04b5",
    "note": ""
   },
   {
@@ -168,8 +168,8 @@
    "file": "downloads/csv/wenshi_articles/广西.csv",
    "format": "CSV",
    "rows": 105519,
-   "bytes": 46469297,
-   "sha256": "cb052f6b025b2cfa9f95025bb93d588309d24270169c8e19f995fd6c31413fa8",
+   "bytes": 45860731,
+   "sha256": "ec8705da5e33f39b9e518d3f1a0dff5c4e89e4c482887c991a3662540a4831ee",
    "note": ""
   },
   {
@@ -178,8 +178,8 @@
    "file": "downloads/csv/wenshi_articles/新疆.csv",
    "format": "CSV",
    "rows": 2137,
-   "bytes": 1160085,
-   "sha256": "cd5eb5b1432389e5036c4211fdef46289f884e56acaac6c7671e9a3bcf18796a",
+   "bytes": 1153729,
+   "sha256": "c0ca8cb72595a1a915585e2e3baa05db7901679750670070f7051d5ed685719b",
    "note": ""
   },
   {
@@ -188,8 +188,8 @@
    "file": "downloads/csv/wenshi_articles/江苏.csv",
    "format": "CSV",
    "rows": 99963,
-   "bytes": 42857935,
-   "sha256": "436aa722080720cc7a828df9875e8f40cd164bb5d778a5550be0bb2289a92c91",
+   "bytes": 42813646,
+   "sha256": "72875d9d42e1c6951cb9115b70ebf0c05497d4eddd4226d07cd932b556ed873f",
    "note": ""
   },
   {
@@ -198,8 +198,8 @@
    "file": "downloads/csv/wenshi_articles/河北.csv",
    "format": "CSV",
    "rows": 31300,
-   "bytes": 13699368,
-   "sha256": "8a9045429114332123f7e4159003da72a28c36ee24c3169a8a2fe624d065f6d1",
+   "bytes": 13682432,
+   "sha256": "e4a9de539014f39746c9cc0e30bd6fb6671b0677c37ca1b787e91111642e783b",
    "note": ""
   },
   {
@@ -208,8 +208,8 @@
    "file": "downloads/csv/wenshi_articles/河南.csv",
    "format": "CSV",
    "rows": 27030,
-   "bytes": 11814648,
-   "sha256": "78e14d24bcf2bd5c426d4a9b20db81f50ec6d55d9d07984e3678887397098e6a",
+   "bytes": 11805084,
+   "sha256": "fe89d9a385c1fa04514130d0e5c8aeb92e91e51c898092a31027bf419eb24bc3",
    "note": ""
   },
   {
@@ -218,8 +218,8 @@
    "file": "downloads/csv/wenshi_articles/海南.csv",
    "format": "CSV",
    "rows": 7676,
-   "bytes": 3379094,
-   "sha256": "53e1c53dc25f59ad87a08436835e8619ca2a0abebeced5feceeacf2cd640e0c4",
+   "bytes": 3388284,
+   "sha256": "57fd99e67dc59f83493fa03b3e327fdf465159d636cc3ce0f29360931ea75880",
    "note": ""
   },
   {
@@ -228,8 +228,8 @@
    "file": "downloads/csv/wenshi_articles/湖北.csv",
    "format": "CSV",
    "rows": 40115,
-   "bytes": 17947613,
-   "sha256": "cff8349a83bf90cf12eb77f69773829a93ca7071cb56b3c19140e9adf22bfcf3",
+   "bytes": 17516919,
+   "sha256": "8e039203e75c46532a82aaa292f84fd8781250a4c0dcbc4b25a25de1f6133f66",
    "note": ""
   },
   {
@@ -237,9 +237,9 @@
    "title": "湖南",
    "file": "downloads/csv/wenshi_articles/湖南.csv",
    "format": "CSV",
-   "rows": 37683,
-   "bytes": 16373057,
-   "sha256": "3c61c1829503f323dc7ba9b94edd7b6d91e24dce7b664f68e06db9cbcc67d323",
+   "rows": 37680,
+   "bytes": 16364763,
+   "sha256": "bd017ecf128c07f3228dd150de3e1d52d781eaf66fd36734be507c0a2cec59ad",
    "note": ""
   },
   {
@@ -248,8 +248,8 @@
    "file": "downloads/csv/wenshi_articles/甘肃.csv",
    "format": "CSV",
    "rows": 14831,
-   "bytes": 6488751,
-   "sha256": "913f990ef943de510debed1bcc8d08a455057988974b6b2a85f0e95528678779",
+   "bytes": 6495745,
+   "sha256": "269810a5943a6286f719ab6577a998c37889f787b11e7adfdc1a031236261d34",
    "note": ""
   },
   {
@@ -258,8 +258,8 @@
    "file": "downloads/csv/wenshi_articles/福建.csv",
    "format": "CSV",
    "rows": 61505,
-   "bytes": 27075927,
-   "sha256": "31bfa9eb9d7ac645023450b0e2f20582c20bdaa39de86f0e15f3c62ef553139e",
+   "bytes": 27129667,
+   "sha256": "73fd518220e2b37d380f4e68c9db64a258383435ecea23f41dbfda2754e5f805",
    "note": ""
   },
   {
@@ -268,8 +268,8 @@
    "file": "downloads/csv/wenshi_articles/西藏.csv",
    "format": "CSV",
    "rows": 1639,
-   "bytes": 751472,
-   "sha256": "7180544600c436fd79440ceee14fcad79fadd212825bc28adeca8b4f9efb4048",
+   "bytes": 738125,
+   "sha256": "cd3977f59e39080d2d65117c4b83fd79c2e635c469988ea1c6c2e0d61d0356e4",
    "note": ""
   },
   {
@@ -278,8 +278,8 @@
    "file": "downloads/csv/wenshi_articles/贵州.csv",
    "format": "CSV",
    "rows": 60775,
-   "bytes": 26986499,
-   "sha256": "d51905e6e5cbceb35d6a82f5140e839c15ae0c33527dd61f1ce295ce6c2b4a03",
+   "bytes": 26923626,
+   "sha256": "0182d047883bc8a5a9ec20eb7dbf356ca029d861610c0b78c007f282e9d34a47",
    "note": ""
   },
   {
@@ -288,8 +288,8 @@
    "file": "downloads/csv/wenshi_articles/辽宁.csv",
    "format": "CSV",
    "rows": 25065,
-   "bytes": 10823504,
-   "sha256": "499eb7d936bf02dde2420e8aca897483d596895b06c2a76105afa900f61e699d",
+   "bytes": 10829672,
+   "sha256": "5c1d30477ac331d91a64ec11eb2dffb6d0dacb379a356f4ca846aac68108c18e",
    "note": ""
   },
   {
@@ -298,8 +298,8 @@
    "file": "downloads/csv/wenshi_articles/重庆.csv",
    "format": "CSV",
    "rows": 23438,
-   "bytes": 10344680,
-   "sha256": "76278fd0c45f6025c7223b4efb45ea82325eaf76eb5590f37b85a2406ce9737c",
+   "bytes": 10334043,
+   "sha256": "f645cd59b04af19e0f6c82a37beeb37ab9f2d063b571c2b6cd0bb6f924fe2cde",
    "note": ""
   },
   {
@@ -308,8 +308,8 @@
    "file": "downloads/csv/wenshi_articles/陕西.csv",
    "format": "CSV",
    "rows": 37045,
-   "bytes": 16163243,
-   "sha256": "dcc4e0d58741629379271a98df9c9fddb8195409088416d9f93d0cd475f09fa5",
+   "bytes": 16184633,
+   "sha256": "8859b595297b2a04d0cda5e303ee212ff9aa15b773f7a27ed3dc9a3950c2824f",
    "note": ""
   },
   {
@@ -318,8 +318,8 @@
    "file": "downloads/csv/wenshi_articles/青海.csv",
    "format": "CSV",
    "rows": 5685,
-   "bytes": 2534029,
-   "sha256": "2f81bb29113688f282536c286ff36336fb20ea3a0afed01bcd9bd607bec725a6",
+   "bytes": 2529653,
+   "sha256": "f297417304ebf6a815966aa13f7a18fa986395cc75944a0b5ee4f6c3257abdb9",
    "note": ""
   },
   {
@@ -328,8 +328,8 @@
    "file": "downloads/csv/wenshi_articles/黑龙江.csv",
    "format": "CSV",
    "rows": 7943,
-   "bytes": 3568757,
-   "sha256": "5e827efdb134f154b22f94addd27703a380534cd49d5f0cd7272e2f25bf440c8",
+   "bytes": 3565486,
+   "sha256": "4f990fbb419bc44d9cb391494d7adeee5819b8ac18f2a81e96a6983711dc74a1",
    "note": ""
   },
   {
@@ -337,9 +337,9 @@
    "title": "Wenshi ziliao index entries (all provinces)",
    "file": "downloads/wenshi_articles.csv.gz",
    "format": "CSV, gzipped",
-   "rows": 1025817,
-   "bytes": 32349379,
-   "sha256": "6c4a0198946522498150469944ac33ba0cbc998c9ccb4f01fd2b76d4ecceb64b",
+   "rows": 1025796,
+   "bytes": 32382890,
+   "sha256": "1f4c87909a62f580d263fe5abdf4d57beab257622d3309cc02e5ff15b8326549",
    "note": "Over 1M rows: too many for most spreadsheets; use the per-province files"
   },
   {
@@ -348,8 +348,8 @@
    "file": "downloads/china-archive-guides-csv.zip",
    "format": "ZIP",
    "rows": null,
-   "bytes": 35197530,
-   "sha256": "3e17a22b509d08a1fc7956c46d78f0eb93dccef79638cf7d416479f2308f9051",
+   "bytes": 35230165,
+   "sha256": "6daced080b9025e1134ab777382454d45ebe5d5f5222ee8db98112d41c87b237",
    "note": ""
   },
   {
@@ -358,8 +358,8 @@
    "file": "downloads/china-archive-guides.sqlite.zip",
    "format": "SQLite, zipped",
    "rows": null,
-   "bytes": 81353964,
-   "sha256": "6eac09440a2e4d37e2cc2e520376b4666cfcb168c38830d6e71e0d6357a4d495",
+   "bytes": 81333250,
+   "sha256": "b0829d502e981a06e33be2c00ec6c99d5574967cf4d0db85e4c68ebb39ea648c",
    "note": "Open with DB Browser for SQLite, R, Python, or any SQLite client"
   }
  ],
@@ -619,7 +619,11 @@
    ],
    [
     "page",
-    "Page in the indexed issue, as printed (empty where the index prints '( )')"
+    "Page in the indexed issue: the first number printed (empty where the index prints '( )')"
+   ],
+   [
+    "page_raw",
+    "The printed page value when it is not a single plausible page, e.g. a range '116—120' or '期刊 4/94'"
    ],
    [
     "scan",

@@ -57,8 +57,12 @@ def fonds(page_rows: list[str]) -> list[dict]:
     return out
 
 
+# Imprint lines (出版：…, 编　辑：…, 主办, 印刷, any "label：value") mention 文史 but are not series headings.
+IMPRINT_LINE = re.compile(r"(出\s*版|编\s*辑|主\s*办|印\s*刷|[：:])")
+
+
 def is_series_head(r: str) -> bool:
-    return "文史" in r and len(r) < 30 and not re.search(r"[…⋯]", r) and "编辑" not in r
+    return "文史" in r and len(r) < 30 and not re.search(r"[…⋯]", r) and not IMPRINT_LINE.search(r)
 
 
 def merge_wrapped(page_rows: list[str], row_re: re.Pattern, standalone=SECTION_HEAD.match) -> list[str]:
@@ -93,17 +97,18 @@ def toc(page_rows: list[str]) -> list[dict]:
     return out
 
 
-def articles(page_rows: list[str], ctx: dict) -> list[dict]:
-    """ctx carries the current series/issue heading across pages of a volume."""
+def articles(page_rows: list[str], ctx: dict, headings: bool = True) -> list[dict]:
+    """ctx carries the current series/issue heading across pages of a volume. With headings=False
+    (fallback over lines the model did not mark up), entries are read but series/issue are left alone."""
     out = []
     standalone = lambda r: bool(SECTION_HEAD.match(r)) or is_series_head(r)
     for r in merge_wrapped(page_rows, ARTICLE_ROW, standalone):
-        if m := ISSUE_HEAD.match(r.replace(" ", "")):
+        if headings and (m := ISSUE_HEAD.match(r.replace(" ", ""))):
             ctx["issue"] = int(m.group(1))
         elif m := ARTICLE_ROW.match(r):
             out.append({"series": ctx.get("series"), "issue": ctx.get("issue"),
                         "title": m["title"].strip(), "author": m["author"].strip() or None,
                         "page": int(m["page"])})
-        elif is_series_head(r):
+        elif headings and is_series_head(r):
             ctx["series"], ctx["issue"] = r.strip(), None
     return out

@@ -66,7 +66,8 @@ COLUMNS = {
         ("province_zh", "Province"), ("index_title", "Provincial index (e.g. …四川卷)"),
         ("locality", "Locality volume (e.g. 成都市)"), ("series", "Series title (e.g. …文史资料选辑)"),
         ("issue", "Issue number (第N辑)"), ("title", "Article title"), ("author", "Author(s)"),
-        ("page", "Page in the indexed issue, as printed (empty where the index prints '( )')"),
+        ("page", "Page in the indexed issue: the first number printed (empty where the index prints '( )')"),
+        ("page_raw", "The printed page value when it is not a single plausible page, e.g. a range '116—120' or '期刊 4/94'"),
         ("scan", "Scan number within the index"), ("viewer_url", "This scan in the DPUL viewer"),
         ("dpul_url", "The index in DPUL"), ("volume_id", "Volume ID"), ("id", "Row ID")],
     "places": [

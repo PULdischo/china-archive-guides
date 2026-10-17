@@ -92,7 +92,11 @@ and fonds lists).
   1912-1949, reversed ranges are swapped, and years outside 1368-2030 are dropped. The values as extracted
   are kept in `date_start_raw` / `date_end_raw`, with a `date_note` saying what changed.
 - `wenshi_articles.page` is the page number printed in the index (the page in the indexed volume, not a
-  scan number). It is empty where the index prints "( )" or no number.
+  scan number): the first page when a range is printed. It is empty where the index prints "( )", no
+  number, or something that is not a page. `page_raw` keeps the printed value whenever it is more than a
+  single page number (e.g. "116—120", "1 首 13", "期刊 4/94").
+- `wenshi_articles.series` / `issue` come from the index's series and issue headings; imprint and editor
+  lines (出版：…, 编　辑：…) are not treated as series.
 - `extraction` is `vlm` (vision-language model) or `rules` (rule-based parsing of fallback OCR).
 
 ## Loading

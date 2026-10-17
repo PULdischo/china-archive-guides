@@ -1,10 +1,10 @@
 # Pipeline run report
 
 - Guides: 372 ({'handbook': 343, 'wenshi': 29})
-- Pages: 51409; engines: {'dashscope qwen3-vl-plus prompt-v2': 6106, 'rapidocr-onnxruntime 1.4.4': 1292, 'dashscope qwen3-vl-plus wenshi-v3': 44011}
+- Pages: 51409; engines: {'dashscope qwen3-vl-plus prompt-v2': 6106, 'rapidocr-onnxruntime 1.4.4': 1294, 'dashscope qwen3-vl-plus wenshi-v3': 44009}
 - RapidOCR mean line confidence: 0.949
 - Pages blocked by DashScope moderation (RapidOCR fallback used): 1292
-- Extracted fonds rows: 55356; contents entries: 60147; wenshi article rows: 1025817
+- Extracted fonds rows: 55356; contents entries: 60147; wenshi article rows: 1025796
 - Legacy map: 253 places, 311 linked catalog records
 
 | Guide | Kind | Year (raw) | Place match | Places | Pages | Fonds | Contents | Articles |
@@ -361,13 +361,13 @@
 | dcn009wd870 中国文史资料总目录电子版. 陕西卷 | wenshi | 2011 (2011-1299, malformed) | place_name | 陕西 | 1774 | 0 | 0 | 37045 |
 | dcjd473806p 中国文史资料总目录电子版. 辽宁卷 | wenshi | 2011 (2011-1299, malformed) | — | — | 1155 | 0 | 0 | 25065 |
 | dc3r075544d 中国文史资料总目录电子版. 四川卷 | wenshi | 2010 (2010-1199, malformed) | place_name | 四川 | 3981 | 0 | 0 | 75189 |
-| dc02871637j 中国文史资料总目录電子版. 山西卷 | wenshi | 2009 (2009-1299, malformed) | — | — | 1541 | 0 | 0 | 44563 |
+| dc02871637j 中国文史资料总目录電子版. 山西卷 | wenshi | 2009 (2009-1299, malformed) | — | — | 1541 | 0 | 0 | 44561 |
 | dcz603r791q 中国文史资料总目录電子版. 上海卷 | wenshi | 2010 (2010-1199, malformed) | place_name | 上海市 | 535 | 0 | 0 | 11222 |
 | dc6t053s525 中国文史资料总目录电子版. 云南卷 | wenshi | 2009 (2009-1299, malformed) | — | — | 1798 | 0 | 0 | 46739 |
 | dcr207v0858 中国文史资料总目录电子版. 甘肃卷 | wenshi | 2009 (2009-1299, malformed) | place_name | 甘肃 | 605 | 0 | 0 | 14831 |
-| dc2z10x172s 中国文史资料总目录电子版. 北京卷 | wenshi | 2009 (2009-1299, malformed) | — | — | 664 | 0 | 0 | 18355 |
+| dc2z10x172s 中国文史资料总目录电子版. 北京卷 | wenshi | 2009 (2009-1299, malformed) | — | — | 664 | 0 | 0 | 18339 |
 | dcgt54kz535 中国文史资料总目录电子版. 河南卷 | wenshi | 2010 (2010-1199, malformed) | place_name | 河南 | 1276 | 0 | 0 | 27030 |
-| dcvt150v76k 中国文史资料总目录电子版. 湖南卷 | wenshi | 2009 (2009-1299, malformed) | place_name | 湖南 | 1384 | 0 | 0 | 37683 |
+| dcvt150v76k 中国文史资料总目录电子版. 湖南卷 | wenshi | 2009 (2009-1299, malformed) | place_name | 湖南 | 1384 | 0 | 0 | 37680 |
 | dctb09jh197 中国文史资料总目录电子版. 福建卷 | wenshi | 2009 (2009-1299, malformed) | — | — | 2444 | 0 | 0 | 61505 |
 | dcp84190804 中国文史资料总目录电子版. 黑龙江卷 | wenshi | 2011 (2011-1299, malformed) | place_name | 黑龙江 | 439 | 0 | 0 | 7943 |
 | dc4t64h077j 中国文史资料总目录电子版. 浙江卷 | wenshi | 2012 (2012-1199, malformed) | place_name | 广西壮族自治区 | 3022 | 0 | 0 | 71095 |

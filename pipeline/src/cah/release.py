@@ -20,8 +20,12 @@ import pyarrow.parquet as pq
 
 from .config import EXPORT, ROOT
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 CHANGELOG = [  # newest first; rendered into the dataset card
+    ("0.1.2", "Fixed wenshi_articles: series is no longer taken from imprint or editor lines (出版：…, 编　辑：…; "
+              "107,006 entries in 0.1.1); printed page ranges and other non-page values are no longer run "
+              "together into one number (1,165 entries over 2000 in 0.1.1). `page` is the first page of a range "
+              "and the new `page_raw` column keeps the printed value."),
     ("0.1.1", "Downloads for spreadsheet and SQL users (flat CSVs, per-province wenshi CSVs, a ZIP of everything, "
               "an SQLite database). Site bundle now ships the static search index. Data tables unchanged."),
     ("0.1.0", "First release: all {n_handbooks} archival handbooks ({n_handbook_pages} pages) and all {n_wenshi} "
@@ -85,7 +89,7 @@ SCHEMAS = {
         ("page", I), ("extraction", S), ("engine", S)]),
     "wenshi_articles": pa.schema([
         ("id", S), ("guide_id", S), ("volume_id", S), ("locality", S), ("page_n", I), ("canvas_id", S),
-        ("series", S), ("issue", I), ("title", S), ("author", S), ("page", I), ("section", S),
+        ("series", S), ("issue", I), ("title", S), ("author", S), ("page", I), ("page_raw", S), ("section", S),
         ("extraction", S), ("engine", S)]),
     "places": pa.schema([
         ("id", S), ("level", S), ("code", S), ("name_zh", S), ("name_pinyin", S), ("name_en", S),
@@ -146,7 +150,7 @@ def _toc():
 def _articles():
     for r in _rows("wenshi_articles"):
         yield {**{k: _str(r.get(k)) for k in ("id", "guide_id", "volume_id", "locality", "canvas_id", "series",
-                                              "title", "author", "section", "extraction", "engine")},
+                                              "title", "author", "page_raw", "section", "extraction", "engine")},
                "page_n": _int(r.get("page_n")), "issue": _int(r.get("issue")), "page": _int(r.get("page"))}
 
 
