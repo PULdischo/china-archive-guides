@@ -298,6 +298,69 @@ Sample: 8 handbooks + 2 wenshi ziliao items (2 locality volumes × 8 pages each)
 - **Catalog data:** wenshi ziliao dates carry MARC placeholders (`2010-1199`, `2011-1299`) as well as handbooks (`2004-699`). They are normalized and flagged.
 - Not yet done: Parquet/HF upload, MARCXML harvest, JSON Schema check before the site build, CI for the pipeline, i18n.
 
+## 5b. OCR quality audit plan (2026-10-17)
+
+### First signals (automated scan of all 51,409 pages, no API calls)
+
+| Signal | Count | Reading |
+|---|---|---|
+| Han characters outside GB2312 | 12,365 of 14.8M (0.08%) | Mostly genuine name characters (堃 燊 瑄 镕); little character-level garbage |
+| Private-use / replacement characters | 3 | Negligible |
+| Circled numerals (①④…) | 544 | Footnote markers, sometimes glued to numbers (fonds no. "587④") |
+| Pages with a line repeated ≥3× | 3,933 | Mostly legitimate (date ranges, table labels, page markers); not a loop problem |
+| Wenshi printed page numbers going backwards within an issue | 10,227 of 894,588 pairs (1.1%) | Misread numbers or missed series/issue headings |
+| Fonds numbers repeating / jumping >20 between rows | 719 / 587 of 34,450 pairs | Duplicated or missed rows, or numbering restarts |
+| Structured pages with <80 characters | 132 | Possibly truncated or mostly blank |
+| RapidOCR fallback pages (moderation) | 1,292 | Plainer text, weaker rule-based extraction |
+| **Parser bugs found in code review** | 107,006 wenshi entries with an imprint line as series; 1,165 page ranges concatenated into one number; 112 issue headings in Chinese numerals ignored | Fix in parsing; no re-OCR needed |
+
+### Plan
+
+1. **Automated detectors → per-page flags** (`cah audit`). One row per page with:
+   - sequence checks (printed page numbers, fonds numbers, issue numbers)
+   - implausible values (years, page numbers, counts)
+   - structure checks (entries without page numbers, empty cells in tables, page type vs. content, very short pages)
+   - character checks (rare / non-GB2312 characters, circled numerals, mixed traditional/simplified)
+   - for pages with both engines, agreement with RapidOCR
+
+   Output: `data/export/ocr-audit.csv` plus a summary in the report. Cheap.
+2. **Independent baseline.** RapidOCR currently covers only 1,575 pages. Run it on a stratified random 1,000 pages (~2 h CPU) to measure agreement where nothing was flagged.
+3. **Human review sample (~150 pages)**, stratified by:
+   - flag
+   - page type (fonds table, contents, wenshi index, holdings table)
+   - collection and print quality (1980s typescript vs. later typeset vs. born-digital)
+   - fallback vs. model pages
+
+   Reviewers annotate errors against a fixed taxonomy (below) in a CSV with a link to each scan. Then hand-key 30–50 of these pages as the **gold set** for character error rate (CER) and row-level precision/recall.
+4. **Failure taxonomy**:
+   - character substitution (similar shapes, e.g. 已/己, 未/末)
+   - dropped / duplicated / merged rows
+   - wrapped entries split
+   - columns misaligned (dates or counts in the wrong cell)
+   - numbers misread (years, page numbers)
+   - hallucinated text (not on the page)
+   - reading order (two-column pages)
+   - running heads, imprint or editor lines mixed into entries
+   - normalization (the model "fixing" traditional ↔ simplified or variant forms)
+   - footnote markers
+   - truncation
+5. **Strategies, cheapest first**:
+   - **Parsing fixes (no API cost)**: imprint lines never set the series; page ranges keep the first page plus a raw value; Chinese-numeral issue headings; one-sided ROC years; circled numerals split from numbers; fonds count positions kept.
+   - **Consistency repairs**: use sequence breaks (fonds numbers, printed page numbers) to locate missed or duplicated rows and target re-OCR.
+   - **Targeted re-OCR of flagged pages** (~5k pages, ~$10–15):
+     - higher resolution (full 2,480 px for dense or born-digital wenshi pages)
+     - split dense pages (as in `cah rescue`)
+     - a second model (e.g. Qwen3-VL-Max, or open-weight Qwen3-VL), reconciled by agreement with RapidOCR as the tie-break
+   - **Moderation-blocked pages (1,292)**: open-weight Qwen3-VL run on Princeton GPUs (no content filter) to replace the RapidOCR fallback.
+   - **Lexical checks**: compare names against the admin-division gazetteer and frequent fonds terms (局, 委员会, 公司); flag characters that differ between engines inside known names.
+   - **Human corrections**: a "report an error" link per scan, feeding the planned `corrections/` overlay.
+6. **Success measures:**
+   - CER and row F1 on the gold set, before vs. after
+   - fewer sequence breaks
+   - search eval unchanged or better
+
+   Re-run after each strategy and record the results in this section.
+
 ## 6. Expansion beyond Princeton holdings
 
 **Method**
