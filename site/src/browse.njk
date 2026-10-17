@@ -10,8 +10,10 @@ eleventyComputed:
 ---
 <p class="kind">Browse · {{ b.facetLabel }}</p>
 <h1 lang="zh">{{ b.label }}</h1>
-<p class="note">{{ b.handbooks.length }} archival handbook{% if b.handbooks.length != 1 %}s{% endif %} and
-  {{ b.wenshi.length }} wenshi ziliao volume{% if b.wenshi.length != 1 %}s{% endif %}.
+<p class="note">{{ b.handbooks.length + b.indexes.length }} guide{% if b.handbooks.length + b.indexes.length != 1 %}s{% endif %}:
+  {{ b.handbooks.length }} archival handbook{% if b.handbooks.length != 1 %}s{% endif %} and
+  {{ b.indexes.length }} wenshi ziliao index{% if b.indexes.length != 1 %}es{% endif %}{% if b.nVolumes %}
+  ({{ b.nVolumes }} locality volume{% if b.nVolumes != 1 %}s{% endif %}){% endif %}.
   {% if b.mapId %}<a href="/map/#{{ b.mapId }}">Show on the map</a>.{% endif %}</p>
 
 <form action="/search/" method="get" class="searchbox" role="search">
@@ -29,10 +31,14 @@ eleventyComputed:
 </ul>
 {% endif %}
 
-{% if b.wenshi.length %}
-<h2>Wenshi ziliao volumes <small>({{ b.wenshi.length }})</small></h2>
+{% if b.indexes.length %}
+<h2>Wenshi ziliao indexes <small>({{ b.indexes.length }} · {{ b.nVolumes }} locality volume{% if b.nVolumes != 1 %}s{% endif %})</small></h2>
+{% for ix in b.indexes %}
+<h3><a href="/guides/{{ ix.id }}/" lang="zh">{{ ix.title }}</a>{% if ix.year %} <span class="year">{{ ix.year }}</span>{% endif %}
+  <small>{{ ix.volumes.length }} volume{% if ix.volumes.length != 1 %}s{% endif %}{% if ix.volumes.length < b.nVolumes %} in this list{% endif %}</small></h3>
 <ul class="browse-list">
-  {% for u in b.wenshi %}<li><a href="{{ u.href }}" lang="zh">{{ u.title }}</a>{% if u.year %} <span class="year">{{ u.year }}</span>{% endif %}</li>
+  {% for u in ix.volumes %}<li><a href="{{ u.href }}" lang="zh">{{ u.title.split(" · ")[0] }}</a></li>
   {% endfor %}
 </ul>
+{% endfor %}
 {% endif %}

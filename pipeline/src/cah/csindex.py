@@ -62,7 +62,7 @@ def run() -> None:
             if uid not in unit_ix:
                 unit_ix[uid] = len(units)
                 units.append({"id": uid, "href": m["href"], "title": m["title"], "year": m.get("year") or "",
-                              "dpul": m.get("dpul"),
+                              "dpul": m.get("dpul"), "item": m.get("item", uid), "item_title": m.get("item_title"),
                               "filters": {k: v for k, v in r["filters"].items() if k not in ("guide", "record")}})
             page_n = int(r["url"].rsplit("#p", 1)[1]) if "#p" in r["url"] else 0
             docs += struct.pack("<HH", unit_ix[uid], page_n)

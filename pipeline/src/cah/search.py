@@ -107,7 +107,10 @@ def build_records(guides: list[dict]) -> list[dict]:
         for unit_id, href, title, vols in units:
             base = {"filters": {**filters, "guide": [unit_id]}, "sort": sort}
             unit_text = title_text if g["kind"] != "wenshi" else f"{title} {title_text}"
+            # "item": the guide (handbook, or the wenshi provincial index a volume belongs to), so the
+            # site can count guides rather than volumes.
             meta = {"title": title, "year": str(g.get("year") or ""), "guide": unit_id, "href": href,
+                    "item": g["id"], "item_title": g["title_zh"],
                     "dpul": g["urls"]["dpul"]}
             # "record" separates unit records (browsing by filter, no query) from page records.
             recs.append({**base, "filters": {**base["filters"], "record": ["guide"]}, "url": href,

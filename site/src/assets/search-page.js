@@ -32,10 +32,16 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 const ix = await engine.openIndex(new URL(`${base}csi/`, location.href));
 const normalize = ix.normalize;
 const t2s = await (await fetch(`${base}csi/t2s.json`)).json();
-// Facet values with counts of guides/volumes.
+// Facet values with counts of guides (a handbook, or a wenshi provincial index however many volumes
+// it has), matching the home page and browse pages.
 const facetValues = {};
-for (const u of ix.units) for (const [k, vs] of Object.entries(u.filters))
-  for (const v of vs) (facetValues[k] ??= {})[v] = (facetValues[k][v] || 0) + 1;
+const seen = new Set();
+for (const u of ix.units) for (const [k, vs] of Object.entries(u.filters)) for (const v of vs) {
+  const key = `${k}\u0000${v}\u0000${u.item || u.id}`;
+  if (seen.has(key)) continue;
+  seen.add(key);
+  (facetValues[k] ??= {})[v] = (facetValues[k][v] || 0) + 1;
+}
 const search = (q, opts) => engine.search(ix, q, opts);
 const browse = (filters, opts) => engine.browse(ix, filters, opts);
 const fold = (c) => (t2s[c] ?? c).toLowerCase();
@@ -84,12 +90,13 @@ function render(res, append) {
     </li>`);
   }
   const where = Object.values(state.filters).join(", ");
+  // Results are handbooks and individual wenshi volumes (an index has many), so say "results".
+  const n = res.totalGuides, results = `${n} result${n === 1 ? "" : "s"}`;
   status.textContent = res.browse
-    ? `${res.totalGuides} guide${res.totalGuides === 1 ? "" : "s"}${where ? ` — ${where}` : ""}, newest first`
-    : res.totalGuides
-      ? `${res.totalGuides} guide${res.totalGuides === 1 ? "" : "s"} contain “${state.q}”` +
-        (res.totalGuides > 1 ? " — ranked by number of matching pages" : "")
-      : `No guides contain “${state.q}”.`;
+    ? `${results} (handbooks and wenshi ziliao volumes)${where ? ` — ${where}` : ""}, newest first`
+    : n
+      ? `${results} for “${state.q}” (handbooks and wenshi ziliao volumes)` + (n > 1 ? ", ranked by number of matching pages" : "")
+      : `No results for “${state.q}”.`;
   more.hidden = !(res.next < res.totalGuides);
   state.offset = res.next ?? 0;
 }

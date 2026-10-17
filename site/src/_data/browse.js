@@ -24,8 +24,16 @@ export default function () {
   }
   return [...pages.values()].map((p) => {
     const prov = p.facet === "Province" ? provinces.find((x) => x.zh === p.value) : null;
+    // Wenshi volumes grouped under their provincial index; counts are guides (handbooks + indexes).
+    const indexes = new Map();
+    for (const u of p.units.filter(isWenshi)) {
+      if (!indexes.has(u.item)) indexes.set(u.item, { id: u.item, title: u.item_title, year: u.year, volumes: [] });
+      indexes.get(u.item).volumes.push(u);
+    }
+    for (const ix of indexes.values()) ix.volumes.sort((a, b) => a.title.localeCompare(b.title, "zh"));
+    const handbooks = p.units.filter((u) => !isWenshi(u)).sort(newest);
     return { ...p, label: prov && prov.en ? `${p.value} ${prov.en}` : p.value, mapId: prov?.d ? `province:${prov.code}` : null,
-             handbooks: p.units.filter((u) => !isWenshi(u)).sort(newest),
-             wenshi: p.units.filter(isWenshi).sort((a, b) => a.title.localeCompare(b.title, "zh")) };
+             handbooks, indexes: [...indexes.values()].sort((a, b) => a.title.localeCompare(b.title, "zh")),
+             nVolumes: p.units.filter(isWenshi).length };
   });
 }
