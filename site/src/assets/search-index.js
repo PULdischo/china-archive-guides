@@ -70,13 +70,26 @@ function intersect(lists) {
 const unitPasses = (u, filters) =>
   Object.entries(filters).every(([k, v]) => (u.filters[k] || []).includes(v));
 
-export async function search(ix, query, { filters = {}, offset = 0, want = 10, pagesPerGuide = 3 } = {}) {
+// Units per value of one facet, applying every other filter: counts for tabs that switch that facet.
+function countUnits(ix, unitIds, filters, facet) {
+  const { [facet]: _, ...rest } = filters;
+  const counts = {};
+  for (const u of new Set(unitIds)) {
+    const unit = ix.units[u];
+    if (unitPasses(unit, rest)) for (const v of unit.filters[facet] || []) counts[v] = (counts[v] || 0) + 1;
+  }
+  return counts;
+}
+
+export async function search(ix, query, { filters = {}, offset = 0, want = 10, pagesPerGuide = 3, countBy } = {}) {
   const nq = ix.normalize(query).trim();
   const phrases = nq.split(/\s+/).filter(Boolean);
   const terms = queryTerms(nq);
-  if (!terms.length) return { guides: [], totalGuides: 0, totalPages: 0 };
+  if (!terms.length) return { guides: [], totalGuides: 0, totalPages: 0, counts: {} };
   const lists = await Promise.all(terms.map((t) => ix.postings(encode(t))));
-  const hits = intersect(lists).filter((d) => unitPasses(ix.units[ix.docUnit[d]], filters));
+  const all = intersect(lists);
+  const counts = countBy ? countUnits(ix, all.map((d) => ix.docUnit[d]), filters, countBy) : {};
+  const hits = all.filter((d) => unitPasses(ix.units[ix.docUnit[d]], filters));
 
   // Count matching documents per unit; rank units by count (then newest first).
   const byUnit = new Map();
@@ -116,13 +129,14 @@ export async function search(ix, query, { filters = {}, offset = 0, want = 10, p
     }));
     guides.push(...found.filter(Boolean));
   }
-  return { guides, totalGuides: ranked.length, totalPages: hits.length, next };
+  return { guides, totalGuides: ranked.length, totalPages: hits.length, next, counts };
 }
 
 // Browse by filters with no query: units, newest first.
-export function browse(ix, filters, { offset = 0, want = 20 } = {}) {
+export function browse(ix, filters, { offset = 0, want = 20, countBy } = {}) {
   const units = ix.units.filter((u) => unitPasses(u, filters)).sort((a, b) => (b.year || "").localeCompare(a.year || ""));
   return {
+    counts: countBy ? countUnits(ix, ix.units.keys(), filters, countBy) : {},
     guides: units.slice(offset, offset + want).map((u) => ({ guide: u.id, href: u.href, title: u.title, year: u.year, matches: null, pages: [] })),
     totalGuides: units.length, next: offset + want, browse: true,
   };

@@ -6,15 +6,24 @@ permalink: /search/
 <h1>Search</h1>
 <p class="note">Finds guides whose tables of contents, fonds lists and indexes contain your search, as an exact string
   (no spaces needed in Chinese). Simplified and traditional characters match each other; pinyin and English titles work too.
-  Separate several terms with spaces to require all of them.</p>
+  Separate several terms with spaces to require all of them. Archival handbooks (fonds lists of archives) and
+  wenshi ziliao (indexes of local-history articles) are searched separately; switch between them with the tabs.</p>
 <div id="search-app" data-base="{{ '/' | htmlBaseUrl }}">
   <form class="searchbox" role="search">
     <label for="q" class="visually-hidden">Search</label>
     <input id="q" name="q" type="search" placeholder="e.g. 交通部公路总局, 粮食局, 郵政, Hunan" lang="zh" autocomplete="off">
     <button type="submit">Search</button>
   </form>
+  <fieldset class="tabs">
+    <legend class="visually-hidden">Search in</legend>
+    <label><input type="radio" name="Type" value="Archival handbook 档案馆指南" checked>
+      Archival handbooks <span lang="zh">档案馆指南</span> <span class="n"></span></label>
+    <label><input type="radio" name="Type" value="Wenshi ziliao index 文史资料">
+      Wenshi ziliao volumes <span lang="zh">文史资料</span> <span class="n"></span></label>
+  </fieldset>
   <div class="filters"></div>
   <p class="status" role="status" aria-live="polite"></p>
+  <p class="other" hidden><button type="button" class="link"></button></p>
   <ol class="results"></ol>
   <button class="more" type="button" hidden>More results</button>
 </div>
